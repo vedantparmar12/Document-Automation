@@ -1,10 +1,3 @@
-"""
-Base analyzer class for code analysis
-
-This module provides the foundation for analyzing different types of codebases
-and extracting their structure, dependencies, and metadata.
-"""
-
 import os
 import asyncio
 import logging
@@ -19,7 +12,7 @@ import time
 import stat
 import errno
 from datetime import datetime
-
+import tempfile
 from src.types import (
     CodeAnalysisResult,
     DirectoryInfo,
@@ -34,7 +27,6 @@ from src.security.validation import (
     sanitize_error_message
 )
 
-# Set up a logger for this module to record events and errors.
 logger = logging.getLogger(__name__)
 
 
@@ -74,8 +66,7 @@ class BaseAnalyzer(ABC):
         self.source_type = SourceType(source_type)
         self.config = config or {}
         self.analysis_id = self._generate_analysis_id()
-        self.temp_dir = None  # This will store the path to a temporary directory if one is created.
-
+        self.temp_dir = None  
         # Set default configuration values, allowing them to be overridden by the config dictionary.
         self.max_file_size = self.config.get('max_file_size', 10 * 1024 * 1024)  # 10MB
         self.max_depth = self.config.get('max_depth', 10)
@@ -98,7 +89,6 @@ class BaseAnalyzer(ABC):
         start_time = datetime.now()
 
         try:
-            # First, validate the request to ensure it's safe and well-formed.
             validation_result = validate_analysis_request(self.path, self.source_type.value)
             if not validation_result.is_valid:
                 return AnalysisOperationResult(
@@ -107,18 +97,14 @@ class BaseAnalyzer(ABC):
                 )
 
             logger.info(f"Starting analysis {self.analysis_id} for {self.source_type.value}: {self.path}")
-
-            # Prepare the codebase, which includes cloning from GitHub if necessary.
             await self._prepare_codebase()
 
-            # Perform the different stages of analysis.
             project_structure = await self._analyze_structure()
             dependencies = await self._analyze_dependencies()
             api_endpoints = await self._extract_api_endpoints()
             architecture_info = await self._analyze_architecture()
             metrics = await self._calculate_metrics()
 
-            # Consolidate the results into a single object.
             analysis_result = CodeAnalysisResult(
                 project_structure=project_structure,
                 dependencies=dependencies,
@@ -148,7 +134,6 @@ class BaseAnalyzer(ABC):
             )
 
         finally:
-            # Always attempt to clean up temporary resources, regardless of success or failure.
             await self._cleanup()
 
     async def _prepare_codebase(self):
@@ -160,9 +145,6 @@ class BaseAnalyzer(ABC):
 
     async def _clone_github_repo(self):
         """Clone a GitHub repository to a temporary directory."""
-        import tempfile
-
-        # Create a unique temporary directory for the cloned repository.
         self.temp_dir = tempfile.mkdtemp(prefix=f"analysis_{self.analysis_id}_")
 
         try:
@@ -171,17 +153,12 @@ class BaseAnalyzer(ABC):
                 github_url += '.git'
 
             logger.info(f"Cloning repository: {github_url}")
-
-            # Clone the repository into the temporary directory.
             repo = git.Repo.clone_from(github_url, self.temp_dir)
-
-            # Set the working path to the temporary directory for subsequent analysis.
             self.working_path = self.temp_dir
 
             logger.info(f"Repository cloned to: {self.temp_dir}")
 
         except Exception as e:
-            # If cloning fails, clean up the partially created directory.
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir, onerror=_handle_remove_readonly)
             raise Exception(f"Failed to clone repository: {str(e)}")
@@ -203,7 +180,6 @@ class BaseAnalyzer(ABC):
     async def _scan_directory(self, directory_path: str, current_depth: int = 0, max_depth: int = 10) -> DirectoryInfo:
         """
         Recursively scan a directory to map its structure.
-        
         Args:
             directory_path: The path of the directory to scan.
             current_depth: The current recursion depth.
@@ -232,7 +208,6 @@ class BaseAnalyzer(ABC):
                 item_path = os.path.join(directory_path, item)
 
                 if os.path.isfile(item_path):
-                    # Validate file extension and size before including it in the results.
                     if validate_file_extension(item_path):
                         size_validation = validate_file_size(item_path)
                         if size_validation.is_valid:
@@ -248,7 +223,6 @@ class BaseAnalyzer(ABC):
                             logger.warning(f"Skipping file {item_path}: {size_validation.error}")
 
                 elif os.path.isdir(item_path):
-                    # Recursively call this function for subdirectories.
                     subdir_info = await self._scan_directory(
                         item_path,
                         current_depth + 1,
@@ -283,7 +257,6 @@ class BaseAnalyzer(ABC):
             '.sass': 'sass', '.less': 'less', '.sql': 'sql', '.dockerfile': 'dockerfile',
             '.makefile': 'makefile', '.sh': 'shell', '.bat': 'batch', '.ps1': 'powershell'
         }
-
         return type_mapping.get(ext, 'unknown')
 
     @abstractmethod
@@ -309,14 +282,12 @@ class BaseAnalyzer(ABC):
     async def _cleanup(self):
         """Clean up temporary resources, like the cloned repository directory."""
         if self.temp_dir and os.path.exists(self.temp_dir):
-            # A retry mechanism to handle lingering process locks, common on Windows.
             retries = 3
             for i in range(retries):
                 try:
-                    # Use the onerror handler to deal with read-only file issues.
                     shutil.rmtree(self.temp_dir, onerror=_handle_remove_readonly)
                     logger.info(f"Cleaned up temporary directory: {self.temp_dir}")
-                    return  # Exit the function if cleanup is successful.
+                    return  
                 except Exception as e:
                     logger.warning(f"Failed to clean up temporary directory (attempt {i+1}/{retries}): {self.temp_dir}: {str(e)}")
                     time.sleep(2)  # Increased sleep time to 2 seconds before retrying.
