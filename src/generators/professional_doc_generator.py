@@ -1,10 +1,3 @@
-"""
-Professional Documentation Generator
-
-This module creates comprehensive, detailed documentation similar to high-quality
-open source projects with rich content, examples, and technical details.
-"""
-
 import os
 import logging
 from typing import Dict, Any, List, Optional, Tuple
