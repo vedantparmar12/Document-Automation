@@ -1,34 +1,16 @@
-"""
-Documentation generator for converting analysis results to various documentation formats
-
-This module provides functionality to generate comprehensive documentation from
-analyzed codebase structure in multiple formats (Markdown, HTML, RST, PDF).
-"""
-
 import os
 import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
-
 from src.types import DocumentationResult, DocumentationFormat, CodeAnalysisResult
-
 logger = logging.getLogger(__name__)
 
 class DocumentationGenerator:
-    """
-    Documentation generator for creating comprehensive documentation from analysis results.
-    
-    Supports multiple output formats and customizable content sections.
-    """
+
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """
-        Initialize the documentation generator.
-        
-        Args:
-            config: Optional configuration parameters
-        """
+
         self.config = config or {}
         self.output_dir = self.config.get('output_dir', 'docs')
         self.include_toc = self.config.get('include_toc', True)
@@ -43,23 +25,10 @@ class DocumentationGenerator:
         include_examples: bool = True,
         include_architecture: bool = True
     ) -> DocumentationResult:
-        """
-        Generate documentation from analysis results.
-        
-        Args:
-            analysis_result: The analysis result to generate documentation from
-            format: Output format for documentation
-            include_api_docs: Whether to include API documentation
-            include_examples: Whether to include code examples
-            include_architecture: Whether to include architecture diagrams
-            
-        Returns:
-            DocumentationResult with generated content
-        """
+
         logger.info(f"Generating {format.value} documentation")
         
         try:
-            # Generate content based on format
             if format == DocumentationFormat.MARKDOWN:
                 content = await self._generate_markdown(
                     analysis_result, include_api_docs, include_examples, include_architecture
@@ -79,7 +48,6 @@ class DocumentationGenerator:
             else:
                 raise ValueError(f"Unsupported documentation format: {format}")
             
-            # Create metadata
             metadata = {
                 'format': format.value,
                 'generated_at': datetime.now().isoformat(),
@@ -110,7 +78,6 @@ class DocumentationGenerator:
         """Generate Markdown documentation."""
         content = []
         
-        # Title and introduction
         content.append("# Project Documentation")
         content.append("")
         content.append("This documentation was automatically generated from codebase analysis.")
@@ -118,7 +85,6 @@ class DocumentationGenerator:
         content.append(f"**Generated at:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         content.append("")
         
-        # Table of Contents
         if self.include_toc:
             content.append("## Table of Contents")
             content.append("")
@@ -133,13 +99,11 @@ class DocumentationGenerator:
                 content.append("- [Metrics](#metrics)")
             content.append("")
         
-        # Project Structure
         content.append("## Project Structure")
         content.append("")
         content.append(self._format_directory_structure_markdown(analysis_result.project_structure))
         content.append("")
         
-        # Dependencies
         if analysis_result.dependencies:
             content.append("## Dependencies")
             content.append("")
@@ -147,7 +111,6 @@ class DocumentationGenerator:
                 content.append(f"- {dep}")
             content.append("")
         
-        # API Endpoints
         if include_api_docs and analysis_result.api_endpoints:
             content.append("## API Endpoints")
             content.append("")
@@ -246,25 +209,21 @@ class DocumentationGenerator:
         """Generate reStructuredText documentation."""
         content = []
         
-        # Title
         content.append("Project Documentation")
         content.append("=" * 20)
         content.append("")
         
-        # Introduction
         content.append("This documentation was automatically generated from codebase analysis.")
         content.append("")
         content.append(f"**Generated at:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         content.append("")
         
-        # Project Structure
         content.append("Project Structure")
         content.append("-" * 17)
         content.append("")
         content.append(self._format_directory_structure_rst(analysis_result.project_structure))
         content.append("")
         
-        # Dependencies
         if analysis_result.dependencies:
             content.append("Dependencies")
             content.append("-" * 12)
