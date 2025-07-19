@@ -178,8 +178,12 @@ Analyzes project dependencies and generates dependency documentation.
   "mcpServers": {
     "document-automation": {
       "command": "python",
-      "args": ["/path/to/Document-Automation/src/main.py"],
-      "env": {}
+      "args": [
+        "C:\\Users\\YourUser\\Projects\\Document-Automation\\src\\server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "C:\\Users\\YourUser\\Projects\\Document-Automation"
+      }
     }
   }
 }
