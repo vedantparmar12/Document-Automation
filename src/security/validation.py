@@ -1,9 +1,3 @@
-"""
-Security validation and utilities for Document Automation MCP Server
-
-Following the security patterns from the original TypeScript MCP server.
-"""
-
 import re
 import os
 import logging
