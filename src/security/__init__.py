@@ -1,9 +1,3 @@
-"""
-Security package for Document Automation MCP Server
-
-This package contains security validation and utilities for safe code analysis.
-"""
-
 from .validation import *
 
 __all__ = [
