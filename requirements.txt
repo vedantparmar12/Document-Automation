@@ -1,0 +1,32 @@
+# Core MCP and API dependencies
+mcp>=0.1.0
+pydantic>=2.0.0,<3.0.0
+fastapi>=0.100.0,<1.0.0
+uvicorn[standard]>=0.23.0,<1.0.0
+
+# Async and networking
+aiofiles>=23.0.0,<24.0.0
+httpx>=0.24.0,<1.0.0
+requests>=2.31.0,<3.0.0
+
+# Git and repository handling
+gitpython>=3.1.0,<4.0.0
+
+# Documentation and parsing
+markdown>=3.4.0,<4.0.0
+jinja2>=3.1.0,<4.0.0
+pygments>=2.15.0,<3.0.0
+PyYAML>=6.0.0,<7.0.0
+toml>=0.10.0,<1.0.0
+
+# Utilities
+python-dotenv>=1.0.0,<2.0.0
+typing-extensions>=4.5.0,<5.0.0
+
+# Optional: For enhanced features
+# python-magic>=0.4.0,<1.0.0
+# tree-sitter>=0.20.0,<1.0.0
+# lxml>=4.9.0,<5.0.0
+# html5lib>=1.1,<2.0.0
+# colorama>=0.4.0,<1.0.0
+# rich>=13.0.0,<14.0.0
