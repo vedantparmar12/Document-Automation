@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import asyncio
 import argparse
 import logging
@@ -7,11 +6,7 @@ from contextlib import asynccontextmanager
 import os
 import sys
 from pathlib import Path
-
-# Add the parent directory to Python path so imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Now load environment variables
 from dotenv import load_dotenv
 env_path = Path(__file__).parent.parent / '.env'
 load_dotenv(env_path)
@@ -23,7 +18,6 @@ from mcp.server.lowlevel.server import NotificationOptions
 from mcp.types import TextContent, Tool, JSONRPCError, INTERNAL_ERROR
 from pydantic import BaseModel, Field
 
-# Add debug print
 print(f"[DEBUG] Starting server from: {__file__}", file=sys.stderr)
 print(f"[DEBUG] Python path: {sys.path}", file=sys.stderr)
 
@@ -34,7 +28,6 @@ try:
     print("[DEBUG] Successfully imported all modules", file=sys.stderr)
 except Exception as e:
     print(f"[DEBUG] Import error: {e}", file=sys.stderr)
-    # Create dummy classes to allow server to start
     class DocumentationTools:
         async def analyze_codebase(self, **kwargs):
             return [TextContent(text="analyze_codebase not implemented")]
