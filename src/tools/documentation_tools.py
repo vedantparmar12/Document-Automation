@@ -1,10 +1,3 @@
-"""
-Documentation tools for MCP server
-
-This module implements the main tool functionality for the Document Automation MCP server,
-providing methods for analyzing codebases and generating documentation.
-"""
-
 import logging
 import json
 import os
