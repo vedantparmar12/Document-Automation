@@ -23,4 +23,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["python", "src/main.py"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", "0.0.0.0:8080", "src.main:app"]
