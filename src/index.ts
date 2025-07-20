@@ -11,9 +11,6 @@ export interface Env {
   MCP_SERVER_NAME: string;
   MCP_SERVER_VERSION: string;
   MCP_SESSION: DurableObjectNamespace;
-  AI?: any;
-  DB?: D1Database;
-  BUCKET?: R2Bucket;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -80,7 +77,7 @@ app.post('/mcp', async (c) => {
     switch (name) {
       case 'analyze_codebase':
         // In Workers, we can't access local filesystem
-        // This would need to work with URLs or R2 storage
+        // This would need to work with URLs or external storage
         return {
           content: [{
             type: 'text',
