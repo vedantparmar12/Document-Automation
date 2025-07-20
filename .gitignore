@@ -76,3 +76,7 @@ claude_desktop_config.json
 
 # Google Cloud
 .gcloudignore
+
+package-lock.json
+node_modules
+.wrangler
