@@ -1,24 +1,104 @@
 # Core MCP dependencies
-mcp>=0.1.0
-pydantic>=2.0.0,<3.0.0
-fastapi>=0.100.0,<1.0.0
-uvicorn[standard]>=0.23.0,<1.0.0
-gunicorn>=20.1.0
+mcp>=1.13.0
+pydantic>=2.11.0,<3.0.0
+pydantic-core>=2.33.0
+pydantic-settings>=2.10.0
+fastapi>=0.116.0,<1.0.0
+uvicorn[standard]>=0.35.0,<1.0.0
+gunicorn>=23.0.0
+starlette>=0.47.0
 
 # Essential utilities
-aiofiles>=23.0.0,<24.0.0
-httpx>=0.24.0,<1.0.0
-requests>=2.31.0,<3.0.0
-gitpython>=3.1.0,<4.0.0
+aiofiles>=23.2.0,<24.0.0
+httpx>=0.28.0,<1.0.0
+httpcore>=1.0.0
+requests>=2.32.0,<3.0.0
+gitpython>=3.1.40,<4.0.0
+typing-extensions>=4.15.0
 
-# Documentation and templating
-markdown>=3.4.0,<4.0.0
-jinja2>=3.1.0,<4.0.0
-pygments>=2.15.0,<3.0.0
-PyYAML>=6.0.0,<7.0.0
-toml>=0.10.0,<1.0.0
+# Documentation generation engines
+sphinx>=8.2.0,<9.0.0
+mkdocs>=1.6.0,<2.0.0
+mkdocs-get-deps>=0.2.0
+nbconvert>=7.16.0,<8.0.0
+nbformat>=5.10.0
+jupyter-client>=8.6.0
+nbclient>=0.10.0
+jupyterlab-pygments>=0.3.0
+
+# Document processing and templating
+markdown>=3.8.0,<4.0.0
+markdown-it-py>=4.0.0
+jinja2>=3.1.6,<4.0.0
+pygments>=2.19.0,<3.0.0
+PyYAML>=6.0.2,<7.0.0
+toml>=0.10.2,<1.0.0
+docutils>=0.21.2
+mistune>=3.1.0
+
+# PDF and document export
+reportlab>=4.4.0,<5.0.0
+python-docx>=0.8.11
+weasyprint>=59.0.0
+pypdf2>=3.0.1
+openpyxl>=3.1.5
+xlsxwriter>=3.2.5
+
+# HTML processing
+beautifulsoup4>=4.13.5,<5.0.0
+lxml>=6.0.0,<7.0.0
+html5lib>=1.1
+soupsieve>=2.8.0
+
+# Data visualization
+matplotlib>=3.10.0,<4.0.0
+seaborn>=0.13.2,<1.0.0
+plotly>=5.24.0,<6.0.0
+kaleido>=1.0.0
+mermaid-py>=0.8.0
+
+# Data processing
+pandas>=2.3.0,<3.0.0
+numpy>=2.3.0,<3.0.0
+
+# CLI and terminal utilities
+rich>=14.1.0,<15.0.0
+typer>=0.17.0,<1.0.0
+click>=8.2.0,<9.0.0
+tabulate>=0.9.0,<1.0.0
+
+# Text processing
+python-slugify>=8.0.4
+unidecode>=1.4.0
+text-unidecode>=1.3
+
+# File handling
+python-magic>=0.4.27
+python-magic-bin>=0.4.14
+watchdog>=6.0.0
+watchfiles>=1.1.0
+
+# Database support
+sqlalchemy>=2.0.40
+alembic>=1.16.0
+
+# Task queue support
+celery>=5.5.0
+redis>=4.6.0
+
+# Tree parsing for code analysis
+tree-sitter>=0.25.0
+tree-sitter-python>=0.23.6
+tree-sitter-javascript>=0.25.0
 
 # Configuration and security
-python-dotenv>=1.0.0,<2.0.0
-typing-extensions>=4.5.0,<5.0.0
-cryptography>=41.0.0,<42.0.0
+python-dotenv>=1.1.1,<2.0.0
+cryptography>=41.0.7,<42.0.0
+python-multipart>=0.0.20
+
+# HTTP and web utilities
+httptools>=0.6.4
+websockets>=15.0.0
+sse-starlette>=3.0.0
+anyio>=4.10.0
+sniffio>=1.3.1
