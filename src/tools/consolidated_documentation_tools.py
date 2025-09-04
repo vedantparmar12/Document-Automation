@@ -397,6 +397,7 @@ class ConsolidatedDocumentationTools:
         generate_interactive: bool = True,
         include_search: bool = True,
         include_navigation: bool = True,
+        include_toc: bool = True,
         include_live_diagrams: bool = True,
         include_code_highlighting: bool = True,
         include_responsive_design: bool = True,
