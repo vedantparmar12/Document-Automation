@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "document-automation": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "Absolute\\Path\\To\\Your\\Project",
+        "run",
+        "python",
+        "src\\server.py"
+      ]
+    }
+  }
+}
