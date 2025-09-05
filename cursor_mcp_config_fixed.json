@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "document-automation": {
+      "command": "python3",
+      "args": ["run_server.py"],
+      "cwd": "C:\\Users\\vedan\\Desktop\\mcp-rag\\Document Automation",
+      "env": {
+        "PYTHONPATH": "C:\\Users\\vedan\\Desktop\\mcp-rag\\Document Automation",
+        "PATH": "/home/vedan/.local/bin:/usr/bin:/bin",
+        "PYTHONUNBUFFERED": "1",
+        "BYPASS_UV": "1"
+      }
+    }
+  }
+}

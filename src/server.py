@@ -35,7 +35,7 @@ try:
 except Exception as e:
     print(f"[DEBUG] Import error: {e}", file=sys.stderr)
     # Create dummy classes to allow server to start
-    class DocumentationTools:
+    class ConsolidatedDocumentationTools:
         async def analyze_codebase(self, **kwargs):
             return [TextContent(text="analyze_codebase not implemented")]
         async def generate_documentation(self, **kwargs):

@@ -481,9 +481,7 @@ class ConsolidatedDocumentationTools:
             if analysis_id not in self.analysis_cache:
                 return [TextContent(
                     type="text",
-                    text=create_error_response(
-                        f"Analysis ID {analysis_id} not found. Please run analyze_codebase first."
-                    ).content[0].text
+                    text=f"**Error**\n\nAnalysis ID {analysis_id} not found. Please run analyze_codebase first."
                 )]
             
             comprehensive_data = self.analysis_cache[analysis_id]
