@@ -1,0 +1,16 @@
+# Cursor IDE Rules for Document Automation MCP Server
+
+## MCP Server Configuration
+This project contains an MCP server that should be run directly with Python, not with UV.
+
+## Correct Command
+Use: `python src/server.py` or `python3 src/server.py`
+NOT: `uv run python src/server.py`
+
+## Dependencies
+All dependencies are installed system-wide with pip, not managed by UV.
+
+## Environment
+- Python 3.12+ required
+- MCP library installed
+- All dependencies in requirements.txt are installed

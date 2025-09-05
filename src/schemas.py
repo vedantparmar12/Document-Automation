@@ -77,17 +77,19 @@ class McpResponse(BaseModel):
 def create_success_response(message: str, data: Any = None) -> McpResponse:
     text = f"**Success**\n\n{message}"
     if data is not None:
-        text += f"\n\n**Result:**\n```json\n{data}\n```"
+        import json
+        text += f"\n\n**Result:**\n```json\n{json.dumps(data, indent=2, default=str)}\n```"
     return McpResponse(
-        content=[McpTextContent(type="text", text=text)]
+        content=[McpTextContent(text=text)]
     )
 
 def create_error_response(message: str, details: Any = None) -> McpResponse:
     text = f"**Error**\n\n{message}"
     if details is not None:
-        text += f"\n\n**Details:**\n```json\n{details}\n```"
+        import json
+        text += f"\n\n**Details:**\n```json\n{json.dumps(details, indent=2, default=str)}\n```"
     return McpResponse(
-        content=[McpTextContent(type="text", text=text, is_error=True)]
+        content=[McpTextContent(text=text, is_error=True)]
     )
 
 # Analysis operation result type
