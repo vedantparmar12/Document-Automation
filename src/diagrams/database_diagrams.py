@@ -155,11 +155,11 @@ class DatabaseDiagramGenerator:
                 app_type = app.get('type', 'web')
                 
                 if app_type == 'web':
-                    lines.append(f"        {app_id}[🌐 {app_name}]:::webapp")
+                    lines.append(f"        {app_id}[[WEB] {app_name}]:::webapp")
                 elif app_type == 'api':
-                    lines.append(f"        {app_id}[🔌 {app_name}]:::api")
+                    lines.append(f"        {app_id}[[API] {app_name}]:::api")
                 else:
-                    lines.append(f"        {app_id}[📱 {app_name}]:::app")
+                    lines.append(f"        {app_id}[[APP] {app_name}]:::app")
             
             lines.extend(["    end", ""])
         
@@ -175,13 +175,13 @@ class DatabaseDiagramGenerator:
                 db_role = db.get('role', 'primary')
                 
                 if db_role == 'primary':
-                    lines.append(f"        {db_id}[(🗄️ {db_name}<br/>{db_type} - Primary)]:::primary_db")
+                    lines.append(f"        {db_id}[([DB] {db_name}<br/>{db_type} - Primary)]:::primary_db")
                 elif db_role == 'replica':
-                    lines.append(f"        {db_id}[(📋 {db_name}<br/>{db_type} - Replica)]:::replica_db")
+                    lines.append(f"        {db_id}[([REPLICA] {db_name}<br/>{db_type} - Replica)]:::replica_db")
                 elif db_role == 'cache':
-                    lines.append(f"        {db_id}[(⚡ {db_name}<br/>Cache)]:::cache_db")
+                    lines.append(f"        {db_id}[([CACHE] {db_name}<br/>Cache)]:::cache_db")
                 else:
-                    lines.append(f"        {db_id}[(🗃️ {db_name}<br/>{db_type})]:::database")
+                    lines.append(f"        {db_id}[([DB] {db_name}<br/>{db_type})]:::database")
             
             lines.extend(["    end", ""])
         
@@ -196,11 +196,11 @@ class DatabaseDiagramGenerator:
                 infra_type = infra.get('type', 'server')
                 
                 if infra_type == 'load_balancer':
-                    lines.append(f"        {infra_id}[⚖️ {infra_name}]:::load_balancer")
+                    lines.append(f"        {infra_id}[[LB] {infra_name}]:::load_balancer")
                 elif infra_type == 'proxy':
-                    lines.append(f"        {infra_id}[🔄 {infra_name}]:::proxy")
+                    lines.append(f"        {infra_id}[[PROXY] {infra_name}]:::proxy")
                 else:
-                    lines.append(f"        {infra_id}[🖥️ {infra_name}]:::server")
+                    lines.append(f"        {infra_id}[[SERVER] {infra_name}]:::server")
             
             lines.extend(["    end", ""])
         
@@ -281,15 +281,15 @@ class DatabaseDiagramGenerator:
         # Add node definitions
         for node_id, node_name, node_type in sorted(nodes):
             if node_type == 'database':
-                lines.append(f"    {node_id}[(🗄️ {node_name})]:::database")
+                lines.append(f"    {node_id}[([DB] {node_name})]:::database")
             elif node_type == 'application':
-                lines.append(f"    {node_id}[📱 {node_name}]:::application")
+                lines.append(f"    {node_id}[[APP] {node_name}]:::application")
             elif node_type == 'cache':
-                lines.append(f"    {node_id}[⚡ {node_name}]:::cache")
+                lines.append(f"    {node_id}[[CACHE] {node_name}]:::cache")
             elif node_type == 'queue':
-                lines.append(f"    {node_id}[📫 {node_name}]:::queue")
+                lines.append(f"    {node_id}[[QUEUE] {node_name}]:::queue")
             else:
-                lines.append(f"    {node_id}[📦 {node_name}]:::component")
+                lines.append(f"    {node_id}[[COMP] {node_name}]:::component")
         
         lines.append("")
         
@@ -398,19 +398,19 @@ class DatabaseDiagramGenerator:
             qp = metrics['query_performance']
             avg_time = qp.get('average_time', 'N/A')
             slow_queries = qp.get('slow_queries', 0)
-            lines.append(f"        QP[📊 Query Performance<br/>Avg: {avg_time}ms<br/>Slow: {slow_queries}]:::metric")
+            lines.append(f"        QP[[PERF] Query Performance<br/>Avg: {avg_time}ms<br/>Slow: {slow_queries}]:::metric")
         
         if 'connection_pool' in metrics:
             cp = metrics['connection_pool']
             active = cp.get('active_connections', 0)
             max_conn = cp.get('max_connections', 0)
-            lines.append(f"        CP[🔗 Connections<br/>Active: {active}/{max_conn}]:::metric")
+            lines.append(f"        CP[[CONN] Connections<br/>Active: {active}/{max_conn}]:::metric")
         
         if 'storage' in metrics:
             storage = metrics['storage']
             used = storage.get('used_space', 'N/A')
             total = storage.get('total_space', 'N/A')
-            lines.append(f"        ST[💾 Storage<br/>Used: {used}/{total}]:::metric")
+            lines.append(f"        ST[[STORE] Storage<br/>Used: {used}/{total}]:::metric")
         
         lines.extend(["    end", ""])
         
@@ -425,11 +425,11 @@ class DatabaseDiagramGenerator:
                 severity = bottleneck.get('severity', 'medium')
                 
                 if severity == 'high':
-                    lines.append(f"        {bottleneck_id}[🔴 {bottleneck_name}]:::high_severity")
+                    lines.append(f"        {bottleneck_id}[[HIGH] {bottleneck_name}]:::high_severity")
                 elif severity == 'medium':
-                    lines.append(f"        {bottleneck_id}[🟡 {bottleneck_name}]:::medium_severity")
+                    lines.append(f"        {bottleneck_id}[[MED] {bottleneck_name}]:::medium_severity")
                 else:
-                    lines.append(f"        {bottleneck_id}[🟢 {bottleneck_name}]:::low_severity")
+                    lines.append(f"        {bottleneck_id}[[LOW] {bottleneck_name}]:::low_severity")
             
             lines.extend(["    end", ""])
         
@@ -443,7 +443,7 @@ class DatabaseDiagramGenerator:
                 opt_name = opt.get('name', 'Optimization')
                 impact = opt.get('impact', 'medium')
                 
-                lines.append(f"        {opt_id}[💡 {opt_name}]:::optimization")
+                lines.append(f"        {opt_id}[[OPT] {opt_name}]:::optimization")
             
             lines.extend(["    end", ""])
         

@@ -171,21 +171,21 @@ class ConsolidatedDocumentationTools:
             
             # 1. Framework detection (if enabled)
             if include_framework_detection:
-                logger.info("🔍 Detecting frameworks and technology stack...")
+                logger.info("Detecting frameworks and technology stack...")
                 frameworks = await analyzer._detect_frameworks()
                 comprehensive_data['frameworks'] = frameworks
                 comprehensive_data['technology_stack'] = self._create_tech_stack_summary(frameworks)
             
             # 2. Database analysis (if enabled)
             if include_database_analysis:
-                logger.info("🗄️ Analyzing database schemas...")
+                logger.info("Analyzing database schemas...")
                 db_schemas = await analyzer._analyze_database_schemas()
                 comprehensive_data['database_schemas'] = db_schemas
                 comprehensive_data['database_summary'] = self._create_database_summary(db_schemas)
             
             # 3. AST analysis with complexity metrics (if enabled)
             if include_ast_analysis:
-                logger.info("🌳 Performing AST analysis with complexity metrics...")
+                logger.info("Performing AST analysis with complexity metrics...")
                 ast_data = await analyzer._parse_code_ast()
                 comprehensive_data['ast_analysis'] = ast_data
                 comprehensive_data['code_metrics'] = self._calculate_comprehensive_metrics(ast_data)
@@ -194,7 +194,7 @@ class ConsolidatedDocumentationTools:
             # 4. Generate all mermaid diagrams automatically (if enabled)
             diagrams = {}
             if include_mermaid_diagrams:
-                logger.info("📊 Generating comprehensive mermaid diagrams...")
+                logger.info("Generating comprehensive mermaid diagrams...")
                 
                 # Generate all diagram types automatically
                 diagram_types = ['architecture', 'dependencies', 'file_structure', 'api_flow', 'database_er']
@@ -212,7 +212,7 @@ class ConsolidatedDocumentationTools:
             
             # 5. Security analysis (if enabled)
             if include_security_analysis:
-                logger.info("🔒 Performing security analysis...")
+                logger.info("Performing security analysis...")
                 security_analysis = self._perform_security_analysis(comprehensive_data)
                 comprehensive_data['security_analysis'] = security_analysis
             
@@ -223,7 +223,7 @@ class ConsolidatedDocumentationTools:
             # 6. Auto-generate preview documentation (if requested)
             preview_docs = None
             if generate_preview_docs:
-                logger.info("📄 Generating preview documentation...")
+                logger.info("Generating preview documentation...")
                 try:
                     preview_docs = self.doc_generator.generate_documentation(
                         analysis_result=comprehensive_data,
@@ -237,7 +237,7 @@ class ConsolidatedDocumentationTools:
             # 7. Auto-export to multiple formats (if requested)
             exported_files = []
             if auto_export_formats:
-                logger.info(f"📦 Auto-exporting to {len(auto_export_formats)} formats...")
+                logger.info(f"Auto-exporting to {len(auto_export_formats)} formats...")
                 for format_type in auto_export_formats:
                     try:
                         export_path = f"docs/{analysis_id}_auto_export.{format_type}"
@@ -263,7 +263,7 @@ class ConsolidatedDocumentationTools:
             # 8. Create interactive preview (if requested)
             interactive_preview_path = None
             if create_interactive_preview:
-                logger.info("🌐 Creating interactive preview...")
+                logger.info("Creating interactive preview...")
                 try:
                     interactive_preview_path = f"docs/{analysis_id}_interactive.html"
                     interactive_content = self.doc_generator.generate_interactive_documentation(
@@ -481,7 +481,9 @@ class ConsolidatedDocumentationTools:
             if analysis_id not in self.analysis_cache:
                 return [TextContent(
                     type="text",
-                    text=f"**Error**\n\nAnalysis ID {analysis_id} not found. Please run analyze_codebase first."
+                    text=create_error_response(
+                        f"Analysis ID {analysis_id} not found. Please run analyze_codebase first."
+                    ).content[0].text
                 )]
             
             comprehensive_data = self.analysis_cache[analysis_id]
@@ -491,7 +493,7 @@ class ConsolidatedDocumentationTools:
             if not title:
                 title = self._extract_project_title(comprehensive_data)
             
-            logger.info(f"📖 Generating {format} documentation with {theme} theme...")
+            logger.info(f"Generating {format} documentation with {theme} theme...")
             
             # 1. Generate main professional documentation
             main_doc_path = os.path.join(output_directory, f"{analysis_id}_{format}_documentation.md")
@@ -514,7 +516,7 @@ class ConsolidatedDocumentationTools:
             # 2. Generate interactive version (if requested)
             interactive_path = None
             if generate_interactive:
-                logger.info("🌐 Creating interactive HTML documentation...")
+                logger.info("Creating interactive HTML documentation...")
                 try:
                     interactive_path = os.path.join(output_directory, f"{analysis_id}_interactive.html")
                     interactive_content = self.doc_generator.generate_interactive_documentation(
@@ -545,7 +547,7 @@ class ConsolidatedDocumentationTools:
             # 3. Auto-export to multiple formats (if requested)
             exported_files = []
             if auto_export_formats:
-                logger.info(f"📦 Auto-exporting to {len(auto_export_formats)} additional formats...")
+                logger.info(f"Auto-exporting to {len(auto_export_formats)} additional formats...")
                 for export_format in auto_export_formats:
                     try:
                         export_path = os.path.join(output_directory, f"{analysis_id}_{export_format}_export.{export_format}")
@@ -795,7 +797,7 @@ class ConsolidatedDocumentationTools:
             
             # Export to all requested formats
             for format_type in formats:
-                logger.info(f"📦 Exporting to {format_type.upper()} format...")
+                logger.info(f"Exporting to {format_type.upper()} format...")
                 
                 try:
                     # Handle multi-language exports
@@ -858,7 +860,7 @@ class ConsolidatedDocumentationTools:
             # Generate comprehensive archive if requested
             archive_info = None
             if generate_archive and successful_exports > 0:
-                logger.info("🗜️ Creating comprehensive archive...")
+                logger.info("Creating comprehensive archive...")
                 try:
                     archive_info = self._create_export_archive(export_results, output_directory, title)
                 except Exception as e:
@@ -868,7 +870,7 @@ class ConsolidatedDocumentationTools:
             # Generate sitemap for HTML exports if requested
             sitemap_info = None
             if generate_sitemap and any(r.get('format') == 'html' for r in export_results):
-                logger.info("🗺️ Generating sitemap...")
+                logger.info("Generating sitemap...")
                 try:
                     sitemap_info = self._generate_sitemap(export_results, output_directory)
                 except Exception as e:

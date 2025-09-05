@@ -110,7 +110,7 @@ class ArchitectureDiagramGenerator:
             container_name = container.get('name', 'Container')
             image = container.get('image', 'unknown')
             
-            lines.append(f"        {container_id}[🐳 {container_name}<br/>Image: {image}]:::container")
+            lines.append(f"        {container_id}[[DOCKER] {container_name}<br/>Image: {image}]:::container")
         
         # Add services
         for service in services:
@@ -118,7 +118,7 @@ class ArchitectureDiagramGenerator:
             service_name = service.get('name', 'Service')
             port = service.get('port', 'N/A')
             
-            lines.append(f"        {service_id}[⚡ {service_name}<br/>Port: {port}]:::service")
+            lines.append(f"        {service_id}[[SVC] {service_name}<br/>Port: {port}]:::service")
         
         # Add databases
         for db in databases:
@@ -126,7 +126,7 @@ class ArchitectureDiagramGenerator:
             db_name = db.get('name', 'Database')
             db_type = db.get('type', 'SQL')
             
-            lines.append(f"        {db_id}[(🗄️ {db_name}<br/>Type: {db_type})]:::database")
+            lines.append(f"        {db_id}[([DB] {db_name}<br/>Type: {db_type})]:::database")
         
         lines.append("    end")
         lines.append("")
@@ -139,7 +139,7 @@ class ArchitectureDiagramGenerator:
                 ext_name = ext_service.get('name', 'External Service')
                 ext_type = ext_service.get('type', 'API')
                 
-                lines.append(f"        {ext_id}[🌐 {ext_name}<br/>Type: {ext_type}]:::external")
+                lines.append(f"        {ext_id}[[EXT] {ext_name}<br/>Type: {ext_type}]:::external")
             
             lines.append("    end")
             lines.append("")
@@ -208,13 +208,13 @@ class ArchitectureDiagramGenerator:
         node_lines = []
         for node_id, node_name in sorted(nodes):
             if 'database' in node_name.lower() or 'db' in node_name.lower():
-                node_lines.append(f"    {node_id}[(🗃️ {node_name})]:::database")
+                node_lines.append(f"    {node_id}[([DB] {node_name})]:::database")
             elif 'api' in node_name.lower():
-                node_lines.append(f"    {node_id}[🔌 {node_name}]:::api")
+                node_lines.append(f"    {node_id}[[API] {node_name}]:::api")
             elif 'queue' in node_name.lower() or 'broker' in node_name.lower():
-                node_lines.append(f"    {node_id}[📫 {node_name}]:::queue")
+                node_lines.append(f"    {node_id}[[QUEUE] {node_name}]:::queue")
             else:
-                node_lines.append(f"    {node_id}[📦 {node_name}]:::component")
+                node_lines.append(f"    {node_id}[[COMP] {node_name}]:::component")
         
         # Insert node definitions at the beginning
         lines[2:2] = node_lines
@@ -252,9 +252,9 @@ class ArchitectureDiagramGenerator:
             actor_type = actor.get('type', 'user')
             
             if actor_type == 'threat':
-                lines.append(f"        {actor_id}[⚠️ {actor_name}]:::threat")
+                lines.append(f"        {actor_id}[[THREAT] {actor_name}]:::threat")
             else:
-                lines.append(f"        {actor_id}[👤 {actor_name}]:::user")
+                lines.append(f"        {actor_id}[[USER] {actor_name}]:::user")
         
         lines.extend([
             "    end",
@@ -270,13 +270,13 @@ class ArchitectureDiagramGenerator:
             control_type = control.get('type', 'firewall')
             
             if control_type == 'firewall':
-                lines.append(f"        {control_id}[🛡️ {control_name}]:::firewall")
+                lines.append(f"        {control_id}[[FIREWALL] {control_name}]:::firewall")
             elif control_type == 'auth':
-                lines.append(f"        {control_id}[🔐 {control_name}]:::auth")
+                lines.append(f"        {control_id}[[AUTH] {control_name}]:::auth")
             elif control_type == 'monitor':
-                lines.append(f"        {control_id}[👁️ {control_name}]:::monitor")
+                lines.append(f"        {control_id}[[MONITOR] {control_name}]:::monitor")
             else:
-                lines.append(f"        {control_id}[🔒 {control_name}]:::security")
+                lines.append(f"        {control_id}[[SEC] {control_name}]:::security")
         
         lines.extend([
             "    end",
@@ -290,7 +290,7 @@ class ArchitectureDiagramGenerator:
             system_id = self.mermaid._sanitize_id(system.get('name', 'system'))
             system_name = system.get('name', 'System')
             
-            lines.append(f"        {system_id}[💻 {system_name}]:::system")
+            lines.append(f"        {system_id}[[SYS] {system_name}]:::system")
         
         lines.extend([
             "    end",

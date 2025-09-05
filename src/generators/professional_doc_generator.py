@@ -288,22 +288,22 @@ class ProfessionalDocumentationGenerator:
 The application follows a modular architecture with clear separation of concerns:
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   User Interface│────▶│   Application   │────▶│    Data Store   │
-│   (CLI/Web)     │     │     Logic       │     │   (Database)    │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                        ┌─────────────────┐
-                        │  Core Services  │
-                        │  (Processing)   │
-                        └─────────────────┘
-                               │
-                               ▼
-                        ┌─────────────────┐
-                        │ External APIs   │
-                        │  (Integrations) │
-                        └─────────────────┘
++-----------------+     +-----------------+     +-----------------+
+|   User Interface|---->|   Application   |---->|    Data Store   |
+|   (CLI/Web)     |     |     Logic       |     |   (Database)    |
++-----------------+     +-----------------+     +-----------------+
+                               |
+                               v
+                        +-----------------+
+                        |  Core Services  |
+                        |  (Processing)   |
+                        +-----------------+
+                               |
+                               v
+                        +-----------------+
+                        | External APIs   |
+                        |  (Integrations) |
+                        +-----------------+
 ```
 
 ### Components
@@ -710,50 +710,50 @@ API requests are limited to:
 
 ```
 project_root/
-│
-├── app/
-│   ├── __init__.py
-│   ├── main.py            # Application entry point
-│   ├── config.py          # Configuration management
-│   ├── models.py          # Data models
-│   └── utils.py           # Utility functions
-│
-├── core/
-│   ├── __init__.py
-│   ├── processor.py       # Core processing logic
-│   ├── validator.py       # Input validation
-│   └── exceptions.py      # Custom exceptions
-│
-├── services/
-│   ├── __init__.py
-│   ├── api_service.py     # External API integration
-│   ├── db_service.py      # Database operations
-│   └── notification.py    # Notification handling
-│
-├── tests/
-│   ├── __init__.py
-│   ├── test_core.py       # Core functionality tests
-│   ├── test_services.py   # Service tests
-│   └── test_integration.py # Integration tests
-│
-├── docs/
-│   ├── api.md             # API documentation
-│   ├── configuration.md   # Configuration guide
-│   └── development.md     # Development guide
-│
-├── scripts/
-│   ├── setup.py           # Setup script
-│   ├── migrate.py         # Database migrations
-│   └── deploy.sh          # Deployment script
-│
-├── data/                  # Data directory
-├── logs/                  # Log files
-├── .env.example           # Environment variables example
-├── .gitignore             # Git ignore file
-├── requirements.txt       # Python dependencies
-├── Dockerfile             # Docker configuration
-├── docker-compose.yml     # Docker Compose configuration
-└── README.md              # This file
+|
+|-- app/
+|   |-- __init__.py
+|   |-- main.py            # Application entry point
+|   |-- config.py          # Configuration management
+|   |-- models.py          # Data models
+|   `-- utils.py           # Utility functions
+|
+|-- core/
+|   |-- __init__.py
+|   |-- processor.py       # Core processing logic
+|   |-- validator.py       # Input validation
+|   `-- exceptions.py      # Custom exceptions
+|
+|-- services/
+|   |-- __init__.py
+|   |-- api_service.py     # External API integration
+|   |-- db_service.py      # Database operations
+|   `-- notification.py    # Notification handling
+|
+|-- tests/
+|   |-- __init__.py
+|   |-- test_core.py       # Core functionality tests
+|   |-- test_services.py   # Service tests
+|   `-- test_integration.py # Integration tests
+|
+|-- docs/
+|   |-- api.md             # API documentation
+|   |-- configuration.md   # Configuration guide
+|   `-- development.md     # Development guide
+|
+|-- scripts/
+|   |-- setup.py           # Setup script
+|   |-- migrate.py         # Database migrations
+|   `-- deploy.sh          # Deployment script
+|
+|-- data/                  # Data directory
+|-- logs/                  # Log files
+|-- .env.example           # Environment variables example
+|-- .gitignore             # Git ignore file
+|-- requirements.txt       # Python dependencies
+|-- Dockerfile             # Docker configuration
+|-- docker-compose.yml     # Docker Compose configuration
+`-- README.md              # This file
 ```
 
 ### Key Directories
@@ -835,9 +835,10 @@ def scrape_page(url):
 ### Data Flow Diagram
 
 ```
-Input → Validation → Processing → Analysis → Output
-  ↓                                            ↓
-Error Handling ← ← ← ← ← ← ← ← ← ← ← ← ← Storage
+Input -> Validation -> Processing -> Analysis -> Output
+  |                                            |
+  v                                            v
+Error Handling <-<-<-<-<-<-<-<-<-<-<-<-<- Storage
 ```
 
 ### Performance Optimization
@@ -1442,9 +1443,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     <div class="header">
         <h1>{title}</h1>
         <div class="header-controls">
-            {('<button class="search-toggle" onclick="toggleSearch()">🔍 Search</button>' if include_search else '')}
-            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
-            {('<button class="nav-toggle" onclick="toggleSidebar()">☰ Menu</button>' if include_navigation else '')}
+            {('<button class="search-toggle" onclick="toggleSearch()">Search</button>' if include_search else '')}
+            <button class="theme-toggle" onclick="toggleTheme()">Dark</button>
+            {('<button class="nav-toggle" onclick="toggleSidebar()">Menu</button>' if include_navigation else '')}
         </div>
     </div>
     
@@ -1481,10 +1482,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
             
             if (body.hasAttribute('data-theme')) {{
                 body.removeAttribute('data-theme');
-                button.textContent = '🌙 Dark';
+                button.textContent = 'Dark';
             }} else {{
                 body.setAttribute('data-theme', 'dark');
-                button.textContent = '☀️ Light';
+                button.textContent = 'Light';
             }}
         }}
         
@@ -1580,7 +1581,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
         
         # Generate basic markdown content and convert to HTML
         project_name = "Project"  # You could extract this from analysis_result
-        project_info = {'type': 'Application', 'description': 'provides functionality'}
+        project_info = {
+            'type': 'Application', 
+            'description': 'provides functionality',
+            'features': ['Core functionality', 'Modular design', 'Extensible architecture']
+        }
         
         markdown_sections = [
             self._generate_overview(project_name, project_info, analysis_result),
@@ -1667,7 +1672,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
             elif format.lower() in ['md', 'markdown']:
                 # Generate markdown
                 project_name = title or "Project"
-                project_info = {'type': 'Application', 'description': 'provides functionality'}
+                project_info = {
+                    'type': 'Application', 
+                    'description': 'provides functionality',
+                    'features': ['Core functionality', 'Modular design', 'Extensible architecture']
+                }
                 
                 markdown_content = self.generate_documentation(
                     analysis_result=analysis_result,

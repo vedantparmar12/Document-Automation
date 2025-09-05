@@ -37,17 +37,17 @@ except Exception as e:
     # Create dummy classes to allow server to start
     class ConsolidatedDocumentationTools:
         async def analyze_codebase(self, **kwargs):
-            return [TextContent(text="analyze_codebase not implemented")]
+            return [TextContent(type="text", text="analyze_codebase not implemented")]
         async def generate_documentation(self, **kwargs):
-            return [TextContent(text="generate_documentation not implemented")]
+            return [TextContent(type="text", text="generate_documentation not implemented")]
         async def list_project_structure(self, **kwargs):
-            return [TextContent(text="list_project_structure not implemented")]
+            return [TextContent(type="text", text="list_project_structure not implemented")]
         async def extract_api_endpoints(self, **kwargs):
-            return [TextContent(text="extract_api_endpoints not implemented")]
+            return [TextContent(type="text", text="extract_api_endpoints not implemented")]
         async def analyze_dependencies(self, **kwargs):
-            return [TextContent(text="analyze_dependencies not implemented")]
+            return [TextContent(type="text", text="analyze_dependencies not implemented")]
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class DocumentAutomationServer:
@@ -334,7 +334,8 @@ class DocumentAutomationServer:
 
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
-            logger.info(f"[DEBUG] handle_call_tool called with name: {name}")
+            logger.info(f"[DEBUG] handle_call_tool called with name: {name}, arguments: {arguments}")
+            print(f"[DEBUG] handle_call_tool called with name: {name}, arguments: {arguments}", file=sys.stderr)
             try:
                 if name == "analyze_codebase":
                     return await self.documentation_tools.analyze_codebase(
@@ -355,41 +356,53 @@ class DocumentAutomationServer:
                 elif name == "generate_documentation":
                     return await self.documentation_tools.generate_documentation(
                         analysis_id=arguments["analysis_id"],
-                        format=arguments.get("format", "interactive"),
-                        theme=arguments.get("theme", "modern"),
+                        format=arguments.get("format", "professional"),
+                        theme=arguments.get("theme", "default"),
                         title=arguments.get("title"),
                         include_api_docs=arguments.get("include_api_docs", True),
                         include_examples=arguments.get("include_examples", True),
                         include_architecture=arguments.get("include_architecture", True),
                         include_mermaid_diagrams=arguments.get("include_mermaid_diagrams", True),
+                        generate_interactive=arguments.get("generate_interactive", True),
                         include_search=arguments.get("include_search", True),
                         include_navigation=arguments.get("include_navigation", True),
                         include_toc=arguments.get("include_toc", True),
                         auto_export_formats=arguments.get("auto_export_formats", []),
                         custom_css=arguments.get("custom_css"),
-                        accessibility_compliance=arguments.get("accessibility_compliance", True),
-                        multi_language_support=arguments.get("multi_language_support", True)
+                        output_directory=arguments.get("output_directory", "docs")
                     )
                 elif name == "export_documentation":
                     return await self.documentation_tools.export_documentation(
                         analysis_id=arguments["analysis_id"],
                         formats=arguments.get("formats", ["html", "pdf"]),
-                        theme=arguments.get("theme", "modern"),
+                        theme=arguments.get("theme", "default"),
                         title=arguments.get("title"),
+                        output_directory=arguments.get("output_directory", "exports"),
                         include_toc=arguments.get("include_toc", True),
                         include_diagrams=arguments.get("include_diagrams", True),
                         include_search=arguments.get("include_search", True),
-                        include_navigation=arguments.get("include_navigation", True),
-                        accessibility_compliance=arguments.get("accessibility_compliance", True),
-                        multi_language_support=arguments.get("multi_language_support", True),
-                        responsive_design=arguments.get("responsive_design", True),
-                        print_friendly=arguments.get("print_friendly", True),
+                        include_metadata=arguments.get("include_metadata", True),
+                        include_analytics=arguments.get("include_analytics", False),
+                        optimize_images=arguments.get("optimize_images", True),
+                        minify_html=arguments.get("minify_html", True),
+                        compress_output=arguments.get("compress_output", False),
+                        validate_output=arguments.get("validate_output", True),
+                        generate_sitemap=arguments.get("generate_sitemap", True),
                         custom_css=arguments.get("custom_css"),
-                        custom_branding=arguments.get("custom_branding"),
-                        output_directory=arguments.get("output_directory"),
-                        archive_formats=arguments.get("archive_formats"),
-                        quality_optimization=arguments.get("quality_optimization", True),
-                        include_metadata=arguments.get("include_metadata", True)
+                        custom_header=arguments.get("custom_header"),
+                        custom_footer=arguments.get("custom_footer"),
+                        custom_logo=arguments.get("custom_logo"),
+                        watermark=arguments.get("watermark"),
+                        split_large_files=arguments.get("split_large_files", True),
+                        generate_archive=arguments.get("generate_archive", False),
+                        include_source_code=arguments.get("include_source_code", True),
+                        include_raw_data=arguments.get("include_raw_data", False),
+                        include_diff_analysis=arguments.get("include_diff_analysis", False),
+                        include_accessibility_features=arguments.get("include_accessibility_features", True),
+                        wcag_compliance_level=arguments.get("wcag_compliance_level", "AA"),
+                        include_print_styles=arguments.get("include_print_styles", True),
+                        languages=arguments.get("languages"),
+                        default_language=arguments.get("default_language", "en")
                     )
                 else:
                     raise JSONRPCError(INTERNAL_ERROR, f"Unknown tool: {name}")
@@ -397,6 +410,16 @@ class DocumentAutomationServer:
             except Exception as e:
                 logger.error(f"Error in tool {name}: {str(e)}")
                 raise JSONRPCError(INTERNAL_ERROR, f"Tool execution failed: {str(e)}")
+        
+        @self.server.list_prompts()
+        async def handle_list_prompts():
+            """Handle prompts list request"""
+            return []
+        
+        @self.server.list_resources()
+        async def handle_list_resources():
+            """Handle resources list request"""
+            return []
 
     async def run(self):
         logger.info("[DEBUG] Starting server run")
@@ -415,16 +438,22 @@ class DocumentAutomationServer:
             )
 
 def main():
-    print("[DEBUG] Main function started", file=sys.stderr)
+    print("[INFO] MCP Document Automation Server starting...", file=sys.stderr)
     parser = argparse.ArgumentParser(description="Document Automation MCP Server")
-    parser.add_argument("--log-level", default="DEBUG", help="Set the logging level")
+    parser.add_argument("--log-level", default="INFO", help="Set the logging level")
     args = parser.parse_args()
 
     logging.basicConfig(level=getattr(logging, args.log_level.upper()))
 
-    server = DocumentAutomationServer()
-    print("[DEBUG] About to run server", file=sys.stderr)
-    asyncio.run(server.run())
+    try:
+        server = DocumentAutomationServer()
+        print("[INFO] Server initialized, starting MCP communication...", file=sys.stderr)
+        asyncio.run(server.run())
+    except Exception as e:
+        print(f"[ERROR] Server failed to start: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

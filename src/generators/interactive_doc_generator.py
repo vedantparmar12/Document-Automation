@@ -284,15 +284,15 @@ class InteractiveDocumentationGenerator:
     def _get_section_icon(self, section_type: str) -> str:
         """Get icon for section type."""
         icons = {
-            'overview': '📋',
-            'architecture': '🏗️',
-            'structure': '📁',
-            'api': '🔌',
-            'database': '🗄️',
-            'dependencies': '📦',
-            'code': '💻'
+            'overview': '[LIST]',
+            'architecture': '[ARCH]',
+            'structure': '[FOLDER]',
+            'api': '[API]',
+            'database': '[DB]',
+            'dependencies': '[PKG]',
+            'code': '[CODE]'
         }
-        return icons.get(section_type, '📄')
+        return icons.get(section_type, '[DOC]')
     
     def _generate_overview_section(self, analysis_data: Dict[str, Any]) -> str:
         """Generate overview section content."""
@@ -472,7 +472,7 @@ class InteractiveDocumentationGenerator:
             <div class="analysis-results">'''
         
         for file_path, result in list(ast_analysis.items())[:10]:
-            status = "✅" if result.get('success') else "❌"
+            status = "[OK]" if result.get('success') else "[FAIL]"
             classes = result.get('classes', 0)
             functions = result.get('functions', 0)
             
