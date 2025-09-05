@@ -315,7 +315,7 @@ class MermaidGenerator:
             dir_label = Path(path).name or "root"
             
             # Add directory node
-            lines.append(f"    {dir_id}[📁 {dir_label}]:::directory")
+            lines.append(f"    {dir_id}[[FOLDER] {dir_label}]:::directory")
             
             # Add files and subdirectories
             for name, item in content.items():
@@ -464,22 +464,22 @@ class MermaidGenerator:
     def _get_file_icon(self, file_ext: str) -> str:
         """Get appropriate icon for file extension."""
         icon_map = {
-            '.py': '🐍',
-            '.js': '📜',
-            '.ts': '📘',
-            '.jsx': '⚛️',
-            '.tsx': '⚛️',
-            '.css': '🎨',
-            '.html': '🌐',
-            '.json': '📋',
-            '.md': '📝',
-            '.yml': '⚙️',
-            '.yaml': '⚙️',
-            '.sql': '🗃️',
-            '.dockerfile': '🐳',
-            '.gitignore': '🚫'
+            '.py': '[PY]',
+            '.js': '[JS]',
+            '.ts': '[TS]',
+            '.jsx': '[JSX]',
+            '.tsx': '[TSX]',
+            '.css': '[CSS]',
+            '.html': '[HTML]',
+            '.json': '[JSON]',
+            '.md': '[MD]',
+            '.yml': '[YML]',
+            '.yaml': '[YAML]',
+            '.sql': '[SQL]',
+            '.dockerfile': '[DOCKER]',
+            '.gitignore': '[GIT]'
         }
-        return icon_map.get(file_ext.lower(), '📄')
+        return icon_map.get(file_ext.lower(), '[FILE]')
     
     def generate_github_repo_overview(
         self,

@@ -184,7 +184,7 @@ The analysis found multiple files and directories in the codebase.
 
 ## Status
 
-✅ Documentation generated successfully
+[OK] Documentation generated successfully
 """
         
         # Save to file

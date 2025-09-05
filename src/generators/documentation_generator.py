@@ -293,7 +293,7 @@ class DocumentationGenerator:
         """Format directory structure for Markdown."""
         def format_directory(dir_info, level=0):
             indent = "  " * level
-            result = [f"{indent}- 📁 **{dir_info.name}/**"]
+            result = [f"{indent}- [FOLDER] **{dir_info.name}/**"]
             
             # Add files
             for file_info in dir_info.files:
@@ -347,28 +347,28 @@ class DocumentationGenerator:
     def _get_file_icon(self, file_type: str) -> str:
         """Get appropriate emoji icon for file type."""
         icons = {
-            'python': '🐍',
-            'javascript': '📜',
-            'typescript': '📘',
-            'java': '☕',
-            'cpp': '⚙️',
-            'c': '⚙️',
-            'go': '🏃',
-            'rust': '🦀',
-            'ruby': '💎',
-            'php': '🐘',
-            'html': '🌐',
-            'css': '🎨',
-            'json': '📋',
-            'yaml': '📋',
-            'markdown': '📝',
-            'text': '📄',
-            'sql': '🗃️',
-            'dockerfile': '🐳',
-            'shell': '🐚',
-            'unknown': '📄'
+            'python': '[PY]',
+            'javascript': '[JS]',
+            'typescript': '[TS]',
+            'java': '[JAVA]',
+            'cpp': '[CPP]',
+            'c': '[C]',
+            'go': '[GO]',
+            'rust': '[RUST]',
+            'ruby': '[RUBY]',
+            'php': '[PHP]',
+            'html': '[HTML]',
+            'css': '[CSS]',
+            'json': '[JSON]',
+            'yaml': '[YAML]',
+            'markdown': '[MD]',
+            'text': '[TXT]',
+            'sql': '[SQL]',
+            'dockerfile': '[DOCKER]',
+            'shell': '[SHELL]',
+            'unknown': '[FILE]'
         }
-        return icons.get(file_type, '📄')
+        return icons.get(file_type, '[FILE]')
     
     def _markdown_to_html(self, markdown_content: str) -> str:
         """Basic Markdown to HTML conversion."""

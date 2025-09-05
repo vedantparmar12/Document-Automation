@@ -626,10 +626,10 @@ class DocumentationExporter:
                     if isinstance(items, list):
                         for item in items:
                             p = doc.add_paragraph()
-                            p.add_run(f"• {item}")
+                            p.add_run(f"- {item}")
                     else:
                         p = doc.add_paragraph()
-                        p.add_run(f"• {items}")
+                        p.add_run(f"- {items}")
     
     def _get_output_path(self, options: ExportOptions, default_filename: str) -> str:
         """Get output file path."""
