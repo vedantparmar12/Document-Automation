@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "document-automation": {
+      "command": "C:\\Users\\vedan\\miniconda3\\python.exe",
+      "args": [
+        "C:\\Users\\vedan\\Desktop\\mcp-rag\\Document Automation\\src\\server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "C:\\Users\\vedan\\Desktop\\mcp-rag\\Document Automation"
+      }
+    }
+  }
+}

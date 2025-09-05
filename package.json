@@ -1,22 +1,24 @@
 {
   "name": "document-automation-mcp-server",
   "version": "1.0.0",
-  "description": "Document Automation MCP Server for Cloudflare Workers",
-  "main": "dist/index.js",
-  "type": "module",
+  "description": "Document Automation MCP Server - Python Implementation",
+  "main": "src/server.py",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "build": "tsc",
-    "type-check": "tsc --noEmit"
+    "start": "python3 src/server.py",
+    "test": "python3 -m pytest tests/ -v",
+    "install-deps": "pip install -r requirements.txt"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "hono": "^4.0.0"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/document-automation-mcp-server"
   },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.0.0",
-    "typescript": "^5.0.0",
-    "wrangler": "^4.25.0"
-  }
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "documentation",
+    "automation",
+    "claude-desktop"
+  ],
+  "author": "Vedant Parmar",
+  "license": "MIT"
 }
