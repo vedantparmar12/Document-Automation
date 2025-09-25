@@ -62,14 +62,122 @@ Document-Automation is a powerful Python-based tool designed to automatically an
 
 ```mermaid
 flowchart TB
-    title["Document-Automation Architecture"]
-    Application[Application]:::module
-
-    classDef database fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef api fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    classDef module fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef frontend fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
-    classDef service fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    subgraph "Document-Automation System"
+        subgraph "Core Server"
+            Server[FastAPI Server<br/>server.py]
+            Runner[Application Runner<br/>run_server.py]
+        end
+        
+        subgraph "Analysis Layer"
+            BaseAnalyzer[Base Analyzer<br/>base_analyzer.py]
+            CodebaseAnalyzer[Codebase Analyzer<br/>codebase_analyzer.py]
+            DatabaseAnalyzer[Database Analyzer<br/>database_analyzer.py]
+            FrameworkDetector[Framework Detector<br/>framework_detector.py]
+        end
+        
+        subgraph "Parsing Layer"
+            ASTAnalyzer[AST Analyzer<br/>ast_analyzer.py]
+            PythonParser[Python Parser<br/>python_parser.py]
+            JSParser[JavaScript Parser<br/>javascript_parser.py]
+            ParserFactory[Parser Factory<br/>parser_factory.py]
+        end
+        
+        subgraph "Generation Layer"
+            DocGenerator[Documentation Generator<br/>documentation_generator.py]
+            InteractiveGen[Interactive Generator<br/>interactive_doc_generator.py]
+            ProfessionalGen[Professional Generator<br/>professional_doc_generator.py]
+        end
+        
+        subgraph "Visualization"
+            ArchDiagrams[Architecture Diagrams<br/>architecture_diagrams.py]
+            DBDiagrams[Database Diagrams<br/>database_diagrams.py]
+            MermaidGen[Mermaid Generator<br/>mermaid_generator.py]
+        end
+        
+        subgraph "Export & Processing"
+            FormatExporter[Format Exporter<br/>format_exporter.py]
+            BackgroundProcessor[Background Processor<br/>background_processor.py]
+            ConcurrentAnalyzer[Concurrent Analyzer<br/>concurrent_analyzer.py]
+        end
+        
+        subgraph "Supporting Systems"
+            Pagination[Pagination System<br/>chunker.py, strategies.py]
+            Security[Security Validation<br/>validation.py]
+            MCPTools[MCP Tools Integration<br/>consolidated_documentation_tools.py]
+        end
+    end
+    
+    subgraph "External Inputs"
+        LocalRepo[Local Repository]
+        GitHubRepo[GitHub Repository]
+        UploadedFiles[Uploaded Files]
+    end
+    
+    subgraph "Output Formats"
+        HTMLDocs[Interactive HTML]
+        PDFDocs[PDF Reports]
+        MarkdownDocs[Markdown Docs]
+        JSONExport[JSON Data]
+    end
+    
+    %% Connections
+    LocalRepo --> Server
+    GitHubRepo --> Server
+    UploadedFiles --> Server
+    
+    Server --> BaseAnalyzer
+    BaseAnalyzer --> CodebaseAnalyzer
+    BaseAnalyzer --> DatabaseAnalyzer
+    BaseAnalyzer --> FrameworkDetector
+    
+    CodebaseAnalyzer --> ParserFactory
+    ParserFactory --> ASTAnalyzer
+    ParserFactory --> PythonParser
+    ParserFactory --> JSParser
+    
+    CodebaseAnalyzer --> DocGenerator
+    DatabaseAnalyzer --> DBDiagrams
+    FrameworkDetector --> ArchDiagrams
+    
+    DocGenerator --> InteractiveGen
+    DocGenerator --> ProfessionalGen
+    
+    ArchDiagrams --> MermaidGen
+    DBDiagrams --> MermaidGen
+    
+    InteractiveGen --> FormatExporter
+    ProfessionalGen --> FormatExporter
+    
+    BackgroundProcessor --> ConcurrentAnalyzer
+    ConcurrentAnalyzer --> Pagination
+    
+    FormatExporter --> HTMLDocs
+    FormatExporter --> PDFDocs
+    FormatExporter --> MarkdownDocs
+    FormatExporter --> JSONExport
+    
+    Security -.-> Server
+    MCPTools -.-> Server
+    
+    classDef server fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef analyzer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef parser fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef generator fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef diagram fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef export fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+    classDef support fill:#f5f5f5,stroke:#616161,stroke-width:1px
+    classDef input fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    classDef output fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    
+    class Server,Runner server
+    class BaseAnalyzer,CodebaseAnalyzer,DatabaseAnalyzer,FrameworkDetector analyzer
+    class ASTAnalyzer,PythonParser,JSParser,ParserFactory parser
+    class DocGenerator,InteractiveGen,ProfessionalGen generator
+    class ArchDiagrams,DBDiagrams,MermaidGen diagram
+    class FormatExporter,BackgroundProcessor,ConcurrentAnalyzer export
+    class Pagination,Security,MCPTools support
+    class LocalRepo,GitHubRepo,UploadedFiles input
+    class HTMLDocs,PDFDocs,MarkdownDocs,JSONExport output
 ```
 
 ### System Components
