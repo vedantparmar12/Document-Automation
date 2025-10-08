@@ -61,6 +61,14 @@ class ProfessionalDocumentationGenerator:
             }
         }
     
+    def _extract_dep_names(self, dependencies: List) -> List[str]:
+        """Helper to extract dependency names from either dict or string format."""
+        if not dependencies:
+            return []
+        if isinstance(dependencies[0], dict):
+            return [d.get('name', '').lower() for d in dependencies if 'name' in d]
+        return [d.lower() for d in dependencies]
+    
     def generate_documentation(
         self, 
         analysis_result: Dict[str, Any], 
@@ -75,6 +83,26 @@ class ProfessionalDocumentationGenerator:
         
         # Extract project information
         project_name = self._extract_project_name(repo_url, project_root)
+        
+        # Check if this is an MCP server and use specialized generator
+        try:
+            from .mcp_doc_generator import MCPDocumentationGenerator
+            
+            classification = analysis_result.get('classification', {})
+            if classification.get('primary_type') == 'mcp_server':
+                mcp_info = analysis_result.get('mcp_server_info')
+                if mcp_info:
+                    logger.info("✨ Detected MCP server - using specialized documentation generator")
+                    mcp_generator = MCPDocumentationGenerator()
+                    return mcp_generator.generate(
+                        mcp_info=mcp_info,
+                        project_name=project_name,
+                        project_root=project_root
+                    )
+                else:
+                    logger.info("MCP server detected but no tool info available, using generic generator")
+        except Exception as e:
+            logger.warning(f"MCP documentation generation failed: {e}, falling back to generic generator")
         project_info = self._analyze_project_type(project_name, analysis_result)
         
         # Generate all sections
@@ -94,6 +122,9 @@ class ProfessionalDocumentationGenerator:
         
         # Architecture
         sections.append(self._generate_architecture(project_name, analysis_result))
+        
+        # Technology Stack
+        sections.append(self._generate_technology_stack(analysis_result))
         
         # Prerequisites
         sections.append(self._generate_prerequisites(analysis_result))
@@ -119,6 +150,18 @@ class ProfessionalDocumentationGenerator:
         
         # Deployment
         sections.append(self._generate_deployment(project_name, analysis_result))
+        
+        # Performance Optimization
+        sections.append(self._generate_performance_optimization())
+        
+        # Monitoring & Logging
+        sections.append(self._generate_monitoring_logging())
+        
+        # Security Considerations
+        sections.append(self._generate_security())
+        
+        # Testing
+        sections.append(self._generate_testing())
         
         # Contributing
         sections.append(self._generate_contributing())
@@ -165,7 +208,12 @@ class ProfessionalDocumentationGenerator:
                 return info
         
         # Check dependencies for type hints
-        deps = [d.lower() for d in analysis_result.get('dependencies', [])]
+        # Handle both string and dict dependencies
+        raw_deps = analysis_result.get('dependencies', [])
+        if raw_deps and isinstance(raw_deps[0], dict):
+            deps = [d.get('name', '').lower() for d in raw_deps]
+        else:
+            deps = [d.lower() for d in raw_deps]
         
         if any(web in deps for web in ['beautifulsoup4', 'scrapy', 'selenium']):
             return self.project_patterns['scraper']
@@ -180,30 +228,47 @@ class ProfessionalDocumentationGenerator:
         }
     
     def _generate_title_section(self, project_name: str, project_info: Dict[str, Any]) -> str:
-        """Generate title and tagline."""
-        tagline = f"A powerful Python-based {project_info['type'].lower()} that {project_info['description']}."
+        """Generate title with professional badges and tagline."""
+        # Generate professional badges
+        badges = f"""# {project_name} - Complete System Documentation
+
+## 🎯 Overview
+
+{project_name} is a {project_info['type'].lower()} that {project_info['description']}.
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Python](https://img.shields.io/badge/python-3.8+-green)
+![License](https://img.shields.io/badge/license-MIT-yellow)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Maintained](https://img.shields.io/badge/maintained-yes-success)"""
         
-        return f"# {project_name}\n\n{tagline}"
+        return badges
     
     def _generate_toc(self) -> str:
-        """Generate table of contents."""
-        return """## Table of Contents
+        """Generate table of contents with emojis."""
+        return """---
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [Legal Disclaimer](#legal-disclaimer)
-- [License](#license)"""
+## 📑 Table of Contents
+
+- [System Architecture](#-system-architecture)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Project Structure](#-project-structure)
+- [Installation Guide](#-installation-guide)
+- [Configuration](#-configuration)
+- [Component Documentation](#-component-documentation)
+- [API Reference](#-api-reference)
+- [Usage Examples](#-usage-examples)
+- [Deployment](#-deployment)
+- [Performance Optimization](#-performance-optimization)
+- [Monitoring & Logging](#-monitoring--logging)
+- [Security Considerations](#-security-considerations)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---"""
     
     def _generate_overview(self, project_name: str, project_info: Dict[str, Any], analysis_result: Dict[str, Any]) -> str:
         """Generate detailed overview section."""
@@ -241,7 +306,7 @@ class ProfessionalDocumentationGenerator:
     
     def _generate_features(self, project_name: str, project_info: Dict[str, Any], analysis_result: Dict[str, Any]) -> str:
         """Generate comprehensive features section."""
-        features = """## Features
+        features = """## ✨ Key Features
 
 ### Core Features
 
@@ -262,14 +327,14 @@ class ProfessionalDocumentationGenerator:
 """
         
         # Add advanced features based on dependencies
-        deps = analysis_result.get('dependencies', [])
-        if any('api' in d.lower() or 'flask' in d.lower() or 'fastapi' in d.lower() for d in deps):
+        deps = self._extract_dep_names(analysis_result.get('dependencies', []))
+        if any('api' in d or 'flask' in d or 'fastapi' in d for d in deps):
             features += """- **RESTful API**: Full API access for integration
 - **Authentication**: Secure access control
 - **Rate Limiting**: Prevent abuse
 """
         
-        if any('database' in d.lower() or 'sql' in d.lower() for d in deps):
+        if any('database' in d or 'sql' in d for d in deps):
             features += """- **Data Persistence**: Store data reliably
 - **Query Optimization**: Fast data retrieval
 - **Backup Support**: Data safety features
@@ -282,37 +347,168 @@ class ProfessionalDocumentationGenerator:
         return features
     
     def _generate_architecture(self, project_name: str, analysis_result: Dict[str, Any]) -> str:
-        """Generate architecture section with diagram."""
-        arch = f"""## Architecture
+        """Generate architecture section with Mermaid diagrams."""
+        arch = f"""## 🏗️ System Architecture
 
-The application follows a modular architecture with clear separation of concerns:
+### High-Level Architecture
 
+```mermaid
+flowchart TB
+    title["{project_name} System Architecture"]
+    
+    subgraph Frontend["🎨 Frontend Layer"]
+        UI[User Interface]
+        Components[UI Components]
+        Client[API Client]
+    end
+    
+    subgraph Backend["⚙️ Backend Layer"]
+        API[API Server]
+        Core[Core Logic]
+        Services[Services]
+    end
+    
+    subgraph Processing["📄 Processing Layer"]
+        Processor[Data Processor]
+        Validator[Validator]
+        Transformer[Transformer]
+    end
+    
+    subgraph Storage["💾 Storage Layer"]
+        DB[(Database)]
+        Cache[(Cache)]
+        Files[File Storage]
+    end
+    
+    subgraph External["🌐 External Services"]
+        APIs[Third-party APIs]
+        Cloud[Cloud Services]
+    end
+    
+    UI --> Client
+    Client --> API
+    API --> Core
+    Core --> Services
+    Services --> Processor
+    Processor --> Validator
+    Validator --> Transformer
+    Transformer --> DB
+    Transformer --> Cache
+    Core --> Files
+    Services --> APIs
+    Services --> Cloud
+
+    classDef frontend fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    classDef backend fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    classDef processing fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef storage fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef external fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    
+    class UI,Components,Client frontend
+    class API,Core,Services backend
+    class Processor,Validator,Transformer processing
+    class DB,Cache,Files storage
+    class APIs,Cloud external
 ```
-+-----------------+     +-----------------+     +-----------------+
-|   User Interface|---->|   Application   |---->|    Data Store   |
-|   (CLI/Web)     |     |     Logic       |     |   (Database)    |
-+-----------------+     +-----------------+     +-----------------+
-                               |
-                               v
-                        +-----------------+
-                        |  Core Services  |
-                        |  (Processing)   |
-                        +-----------------+
-                               |
-                               v
-                        +-----------------+
-                        | External APIs   |
-                        |  (Integrations) |
-                        +-----------------+
+
+### Component Interaction Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API
+    participant Core
+    participant Database
+    participant External
+    
+    User->>Frontend: Request Action
+    Frontend->>API: API Call
+    API->>Core: Process Request
+    Core->>Database: Query Data
+    Database-->>Core: Return Data
+    Core->>External: External API Call
+    External-->>Core: Response
+    Core-->>API: Processed Result
+    API-->>Frontend: JSON Response
+    Frontend-->>User: Display Result
+```
+
+### Data Flow Architecture
+
+```mermaid
+flowchart LR
+    subgraph Input["📥 Input"]
+        Data[User Data]
+        Files[Files]
+        API_In[API Requests]
+    end
+    
+    subgraph Processing["⚙️ Processing"]
+        Validate[Validation]
+        Transform[Transformation]
+        Enrich[Enrichment]
+    end
+    
+    subgraph Storage["💾 Storage"]
+        Primary[(Primary DB)]
+        Cache[(Cache)]
+    end
+    
+    subgraph Output["📤 Output"]
+        Response[API Response]
+        Export[Exports]
+        Notifications[Notifications]
+    end
+    
+    Data --> Validate
+    Files --> Validate
+    API_In --> Validate
+    Validate --> Transform
+    Transform --> Enrich
+    Enrich --> Primary
+    Enrich --> Cache
+    Primary --> Response
+    Cache --> Response
+    Response --> Export
+    Response --> Notifications
+
+    classDef input fill:#e3f2fd,stroke:#1976d2
+    classDef processing fill:#f3e5f5,stroke:#7b1fa2
+    classDef storage fill:#fff3e0,stroke:#f57c00
+    classDef output fill:#e8f5e9,stroke:#388e3c
+    
+    class Data,Files,API_In input
+    class Validate,Transform,Enrich processing
+    class Primary,Cache storage
+    class Response,Export,Notifications output
 ```
 
 ### Components
 
-- **User Interface**: Handles user interactions and displays results
-- **Application Logic**: Core business logic and workflow management
-- **Data Store**: Persistent storage for application data
-- **Core Services**: Specialized services for specific tasks
-- **External APIs**: Integration with third-party services"""
+- **Frontend Layer**: Handles user interactions and displays results
+  - User Interface: Web/CLI interface
+  - UI Components: Reusable UI elements
+  - API Client: Communication with backend
+
+- **Backend Layer**: Core business logic and API services
+  - API Server: RESTful API endpoints
+  - Core Logic: Business rules and workflows
+  - Services: Specialized service modules
+
+- **Processing Layer**: Data processing and transformation
+  - Data Processor: Handles data operations
+  - Validator: Input validation and sanitization
+  - Transformer: Data transformation and formatting
+
+- **Storage Layer**: Persistent and temporary storage
+  - Database: Primary data storage
+  - Cache: High-speed data cache
+  - File Storage: Document and media storage
+
+- **External Services**: Third-party integrations
+  - Third-party APIs: External service integrations
+  - Cloud Services: Cloud platform services"""
         
         return arch
     
@@ -320,7 +516,7 @@ The application follows a modular architecture with clear separation of concerns
         """Generate prerequisites section."""
         language = self._detect_language(analysis_result)
         
-        prereq = """## Prerequisites
+        prereq = """## 📋 Prerequisites
 
 Before installation, ensure you have the following:
 
@@ -344,10 +540,10 @@ Before installation, ensure you have the following:
 """
         
         # Add project-specific prerequisites
-        deps = analysis_result.get('dependencies', [])
-        if any('email' in d.lower() or 'smtp' in d.lower() for d in deps):
+        deps = self._extract_dep_names(analysis_result.get('dependencies', []))
+        if any('email' in d or 'smtp' in d for d in deps):
             prereq += "- Valid email credentials for SMTP\n"
-        if any('database' in d.lower() or 'sql' in d.lower() for d in deps):
+        if any('database' in d or 'sql' in d for d in deps):
             prereq += "- Database server (PostgreSQL/MySQL/SQLite)\n"
         
         prereq += """- Internet connection
@@ -366,7 +562,7 @@ Before installation, ensure you have the following:
         language = self._detect_language(analysis_result)
         repo_name = os.path.basename(repo_url).replace('.git', '')
         
-        install = f"""## Installation
+        install = f"""## 🚀 Installation Guide
 
 ### Step 1: Clone the Repository
 
@@ -444,7 +640,7 @@ python manage.py migrate
     
     def _generate_configuration(self, project_name: str, analysis_result: Dict[str, Any]) -> str:
         """Generate configuration section."""
-        config = f"""## Configuration
+        config = f"""## ⚙️ Configuration
 
 ### Environment Variables
 
@@ -492,7 +688,7 @@ For production environments, consider:
     
     def _generate_usage(self, project_name: str, project_info: Dict[str, Any], analysis_result: Dict[str, Any]) -> str:
         """Generate comprehensive usage section."""
-        usage = f"""## Usage
+        usage = f"""## 💻 Usage Examples
 
 ### Starting the Application
 
@@ -590,97 +786,99 @@ For continuous operation:
         return usage
     
     def _generate_api_reference(self, project_name: str, analysis_result: Dict[str, Any]) -> str:
-        """Generate API reference section."""
-        api_ref = """## API Reference
+        """Generate API reference section with real endpoints."""
+        
+        # Get actual API endpoints from analysis
+        endpoints = analysis_result.get('api_endpoints', [])
+        
+        if not endpoints:
+            # No API endpoints found, return empty string (section won't be shown)
+            return ""
+        
+        api_ref = """## 🔌 API Reference
 
-### Authentication
+### Base URL
 
-All API requests require authentication using an API key:
-
-```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" https://api.example.com/v1/endpoint
+```
+http://localhost:5000
 ```
 
 ### Endpoints
 
-#### GET /api/v1/status
-Get application status
+This project exposes the following API endpoints:
 
-**Request:**
+"""
+        
+        # Group endpoints by path prefix for better organization
+        grouped = {}
+        for ep in endpoints:
+            # Get prefix (first part of path)
+            parts = ep['path'].strip('/').split('/')
+            prefix = f"/{parts[0]}" if parts else ep['path']
+            
+            if prefix not in grouped:
+                grouped[prefix] = []
+            grouped[prefix].append(ep)
+        
+        # Generate documentation for each group
+        for prefix, group_endpoints in grouped.items():
+            api_ref += f"\n### {prefix} Routes\n\n"
+            
+            for ep in group_endpoints:
+                methods = ep.get('methods', 'GET')
+                path = ep.get('path', '/')
+                framework = ep.get('framework', 'Unknown')
+                file = ep.get('file', 'Unknown')
+                
+                api_ref += f"#### {methods} `{path}`\n\n"
+                api_ref += f"**Framework**: {framework}  \n"
+                api_ref += f"**Defined in**: `{file}`\n\n"
+                
+                # Generate example curl command
+                if 'GET' in methods:
+                    api_ref += f"**Example Request:**\n```bash\n"
+                    api_ref += f"curl -X GET http://localhost:5000{path}\n"
+                    api_ref += f"```\n\n"
+                elif 'POST' in methods:
+                    api_ref += f"**Example Request:**\n```bash\n"
+                    api_ref += f"curl -X POST http://localhost:5000{path} \\\\\n"
+                    api_ref += f"  -H \"Content-Type: application/json\" \\\\\n"
+                    api_ref += f"  -d '{{\"key\": \"value\"}}'\n"
+                    api_ref += f"```\n\n"
+                elif 'PUT' in methods:
+                    api_ref += f"**Example Request:**\n```bash\n"
+                    api_ref += f"curl -X PUT http://localhost:5000{path} \\\\\n"
+                    api_ref += f"  -H \"Content-Type: application/json\" \\\\\n"
+                    api_ref += f"  -d '{{\"key\": \"value\"}}'\n"
+                    api_ref += f"```\n\n"
+                elif 'DELETE' in methods:
+                    api_ref += f"**Example Request:**\n```bash\n"
+                    api_ref += f"curl -X DELETE http://localhost:5000{path}\n"
+                    api_ref += f"```\n\n"
+        
+        # Add authentication note if it looks like auth is used
+        deps = analysis_result.get('dependencies', [])
+        has_auth = False
+        if deps:
+            if isinstance(deps[0], dict):
+                dep_names = [d.get('name', '').lower() for d in deps]
+            else:
+                dep_names = [d.lower() for d in deps]
+            has_auth = any(auth in dep_names for auth in ['flask-jwt', 'pyjwt', 'python-jose', 'fastapi-jwt-auth'])
+        
+        if has_auth:
+            api_ref += """
+
+### Authentication
+
+This API uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
+
 ```bash
-curl -X GET https://api.example.com/api/v1/status \\
-  -H "Authorization: Bearer YOUR_API_KEY"
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" http://localhost:5000/api/endpoint
 ```
-
-**Response:**
-```json
-{
-  "status": "active",
-  "version": "1.0.0",
-  "uptime": 3600
-}
-```
-
-#### POST /api/v1/items
-Create a new item
-
-**Request:**
-```bash
-curl -X POST https://api.example.com/api/v1/items \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "Item Name",
-    "url": "https://example.com/item",
-    "settings": {
-      "interval": 3600,
-      "notify": true
-    }
-  }'
-```
-
-**Response:**
-```json
-{
-  "id": "123",
-  "name": "Item Name",
-  "created_at": "2024-01-19T12:00:00Z",
-  "status": "active"
-}
-```
-
-#### GET /api/v1/items/{id}
-Get item details
-
-**Request:**
-```bash
-curl -X GET https://api.example.com/api/v1/items/123 \\
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-#### PUT /api/v1/items/{id}
-Update an item
-
-**Request:**
-```bash
-curl -X PUT https://api.example.com/api/v1/items/123 \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "settings": {
-      "interval": 7200
-    }
-  }'
-```
-
-#### DELETE /api/v1/items/{id}
-Delete an item
-
-**Request:**
-```bash
-curl -X DELETE https://api.example.com/api/v1/items/123 \\
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
+"""
+        
+        api_ref += """
 
 ### Error Responses
 
@@ -706,7 +904,7 @@ API requests are limited to:
     
     def _generate_project_structure(self, analysis_result: Dict[str, Any]) -> str:
         """Generate detailed project structure."""
-        structure = """## Project Structure
+        structure = """## 📁 Project Structure
 
 ```
 project_root/
@@ -852,7 +1050,7 @@ Error Handling <-<-<-<-<-<-<-<-<-<-<-<-<- Storage
     
     def _generate_deployment(self, project_name: str, analysis_result: Dict[str, Any]) -> str:
         """Generate deployment section."""
-        deploy = f"""## Deployment
+        deploy = f"""## 🐳 Deployment
 
 ### Local Deployment
 
@@ -942,7 +1140,7 @@ volumes:
     
     def _generate_contributing(self) -> str:
         """Generate contributing section."""
-        return """## Contributing
+        return """## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -1008,7 +1206,7 @@ pytest tests/test_core.py
     
     def _generate_troubleshooting(self, project_name: str, project_info: Dict[str, Any]) -> str:
         """Generate troubleshooting section."""
-        trouble = f"""## Troubleshooting
+        trouble = f"""## 🔧 Troubleshooting
 
 ### Common Issues
 
@@ -1133,9 +1331,485 @@ The developers are not liable for any damages or losses arising from the use of 
         
         return disclaimer
     
+    def _generate_technology_stack(self, analysis_result: Dict[str, Any]) -> str:
+        """Generate technology stack section."""
+        deps = analysis_result.get('dependencies', [])
+        language = self._detect_language(analysis_result)
+        
+        stack = """## 🛠️ Technology Stack
+
+### Core Technologies
+
+| Technology | Purpose | Version |
+|------------|---------|---------|"""
+        
+        if language == "Python":
+            stack += """
+| **Python** | Core Language | 3.8+ |
+| **pip** | Package Manager | Latest |"""
+            
+            # Add popular frameworks with actual versions
+            for dep in deps:
+                dep_name = dep.get('name', dep) if isinstance(dep, dict) else dep
+                dep_version = dep.get('version', 'Latest') if isinstance(dep, dict) else 'Latest'
+                
+                if 'flask' in dep_name.lower():
+                    stack += f"""
+| **Flask** | Web Framework | {dep_version} |"""
+                elif 'fastapi' in dep_name.lower():
+                    stack += f"""
+| **FastAPI** | Web Framework | {dep_version} |"""
+                elif 'django' in dep_name.lower():
+                    stack += f"""
+| **Django** | Web Framework | {dep_version} |"""
+        elif language == "JavaScript/Node.js":
+            stack += """
+| **Node.js** | Runtime Environment | 16+ |
+| **npm** | Package Manager | Latest |"""
+        
+        stack += """
+
+### Key Dependencies
+
+"""
+        # List major dependencies with versions
+        count = 0
+        for dep in deps[:10]:
+            if isinstance(dep, dict):
+                name = dep.get('name', 'Unknown')
+                version = dep.get('version', 'latest')
+                dep_type = dep.get('type', 'python')
+                
+                if dep_type == 'python':
+                    stack += f"- **{name}** (`{version}`): [View on PyPI](https://pypi.org/project/{name.lower()}/)\n"
+                else:
+                    stack += f"- **{name}** (`{version}`): [View on npm](https://www.npmjs.com/package/{name.lower()})\n"
+            else:
+                # Legacy format support
+                stack += f"- **{dep}**: [View on PyPI](https://pypi.org/project/{dep.lower()}/)\n"
+            count += 1
+        
+        if len(deps) > 10:
+            stack += f"\n*...and {len(deps) - 10} more dependencies*\n"
+        
+        stack += """
+
+### Development Tools
+
+- **Git**: Version control
+- **Virtual Environment**: Isolated dependency management
+- **Testing**: pytest / unittest
+- **Linting**: flake8 / pylint
+- **Formatting**: black / autopep8"""
+        
+        return stack
+    
+    def _generate_performance_optimization(self) -> str:
+        """Generate performance optimization section."""
+        return """## 📊 Performance Optimization
+
+### Optimization Strategies
+
+#### 1. Caching
+
+```python
+# Implement caching for expensive operations
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def expensive_operation(param):
+    # Computation
+    return result
+```
+
+#### 2. Batch Processing
+
+```python
+# Process items in batches
+def process_batch(items, batch_size=100):
+    for i in range(0, len(items), batch_size):
+        batch = items[i:i+batch_size]
+        process(batch)
+```
+
+#### 3. Async Operations
+
+```python
+# Use async for I/O operations
+import asyncio
+
+async def fetch_data(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
+```
+
+#### 4. Database Query Optimization
+
+- Use indexes on frequently queried columns
+- Implement connection pooling
+- Use batch inserts/updates
+- Avoid N+1 query problems
+- Cache frequently accessed data
+
+#### 5. Memory Management
+
+```python
+# Use generators for large datasets
+def process_large_file(filename):
+    with open(filename) as f:
+        for line in f:  # Generator, memory efficient
+            yield process_line(line)
+```
+
+### Performance Metrics
+
+Monitor these key metrics:
+
+| Metric | Target | Monitoring Tool |
+|--------|--------|-----------------|
+| Response Time | < 200ms | Application logs |
+| Memory Usage | < 512MB | System monitor |
+| CPU Usage | < 70% | System monitor |
+| Error Rate | < 0.1% | Error tracking |
+| Throughput | > 100 req/s | Load testing |
+
+### Load Testing
+
+```bash
+# Using Apache Bench
+ab -n 1000 -c 10 http://localhost:5000/api/endpoint
+
+# Using locust
+locust -f locustfile.py --host=http://localhost:5000
+```"""
+    
+    def _generate_monitoring_logging(self) -> str:
+        """Generate monitoring and logging section."""
+        return """## 📈 Monitoring & Logging
+
+### Logging Configuration
+
+```python
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        RotatingFileHandler(
+            'logs/app.log',
+            maxBytes=10485760,  # 10MB
+            backupCount=5
+        ),
+        logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+```
+
+### Log Levels
+
+| Level | Usage | Example |
+|-------|-------|---------|
+| **DEBUG** | Detailed diagnostic info | Variable values, function calls |
+| **INFO** | General informational messages | Server started, task completed |
+| **WARNING** | Warning messages | Deprecated features, potential issues |
+| **ERROR** | Error messages | Operation failed, exception caught |
+| **CRITICAL** | Critical failures | System crash, data corruption |
+
+### Application Monitoring
+
+#### Health Check Endpoint
+
+```python
+@app.route('/health')
+def health_check():
+    return {
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'version': '1.0.0',
+        'uptime': get_uptime()
+    }
+```
+
+#### Metrics Collection
+
+```python
+from prometheus_client import Counter, Histogram
+
+# Define metrics
+request_counter = Counter('requests_total', 'Total requests')
+request_latency = Histogram('request_latency_seconds', 'Request latency')
+
+# Use metrics
+@request_latency.time()
+def process_request():
+    request_counter.inc()
+    # Process request
+```
+
+### Error Tracking
+
+```python
+import sentry_sdk
+
+# Initialize Sentry
+sentry_sdk.init(
+    dsn="your-sentry-dsn",
+    traces_sample_rate=1.0
+)
+
+# Automatic error tracking
+try:
+    risky_operation()
+except Exception as e:
+    sentry_sdk.capture_exception(e)
+```
+
+### System Monitoring
+
+```bash
+# Check system resources
+top
+htop
+
+# Monitor disk usage
+df -h
+
+# Check memory usage
+free -h
+
+# View logs
+tail -f logs/app.log
+```"""
+    
+    def _generate_security(self) -> str:
+        """Generate security considerations section."""
+        return """## 🔐 Security Considerations
+
+### Best Practices
+
+#### 1. Environment Variables
+
+**Never commit sensitive data to version control**
+
+```python
+# Use environment variables
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv('API_KEY')
+DATABASE_URL = os.getenv('DATABASE_URL')
+SECRET_KEY = os.getenv('SECRET_KEY')
+```
+
+#### 2. Input Validation
+
+```python
+from pydantic import BaseModel, validator
+
+class UserInput(BaseModel):
+    email: str
+    age: int
+    
+    @validator('email')
+    def validate_email(cls, v):
+        if '@' not in v:
+            raise ValueError('Invalid email')
+        return v
+    
+    @validator('age')
+    def validate_age(cls, v):
+        if v < 0 or v > 150:
+            raise ValueError('Invalid age')
+        return v
+```
+
+#### 3. Authentication & Authorization
+
+```python
+from flask import request, abort
+import jwt
+
+def require_auth(f):
+    def wrapper(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            abort(401)
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        except:
+            abort(401)
+        return f(*args, **kwargs)
+    return wrapper
+
+@app.route('/protected')
+@require_auth
+def protected_route():
+    return {'message': 'Access granted'}
+```
+
+#### 4. Rate Limiting
+
+```python
+from flask_limiter import Limiter
+
+limiter = Limiter(
+    app,
+    key_func=lambda: request.remote_addr,
+    default_limits=["100 per hour"]
+)
+
+@app.route('/api/endpoint')
+@limiter.limit("10 per minute")
+def rate_limited_endpoint():
+    return {'status': 'ok'}
+```
+
+#### 5. Data Sanitization
+
+```python
+import bleach
+
+def sanitize_input(user_input):
+    # Remove dangerous HTML/JavaScript
+    clean = bleach.clean(user_input, strip=True)
+    return clean
+```
+
+### Security Checklist
+
+- [ ] All sensitive data stored in environment variables
+- [ ] Input validation on all user inputs
+- [ ] Authentication required for protected endpoints
+- [ ] Rate limiting implemented
+- [ ] HTTPS enabled in production
+- [ ] SQL injection protection (use parameterized queries)
+- [ ] XSS protection (sanitize user inputs)
+- [ ] CSRF protection enabled
+- [ ] Regular security updates for dependencies
+- [ ] Security headers configured (CORS, CSP, etc.)
+
+### Dependency Security
+
+```bash
+# Check for vulnerable dependencies
+pip install safety
+safety check
+
+# Update dependencies
+pip list --outdated
+pip install --upgrade package_name
+```"""
+    
+    def _generate_testing(self) -> str:
+        """Generate testing section."""
+        return """## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Run specific test file
+pytest tests/test_core.py
+
+# Run with verbose output
+pytest -v
+
+# Run tests in parallel
+pytest -n auto
+```
+
+### Test Structure
+
+```python
+# tests/test_example.py
+import pytest
+from app.main import function_to_test
+
+def test_basic_functionality():
+    result = function_to_test(input_data)
+    assert result == expected_output
+
+def test_error_handling():
+    with pytest.raises(ValueError):
+        function_to_test(invalid_input)
+
+@pytest.fixture
+def sample_data():
+    return {'key': 'value'}
+
+def test_with_fixture(sample_data):
+    result = process(sample_data)
+    assert result is not None
+```
+
+### Test Coverage
+
+```bash
+# Generate coverage report
+pytest --cov=app --cov-report=html
+
+# View coverage report
+open htmlcov/index.html
+```
+
+### Integration Tests
+
+```python
+# tests/test_integration.py
+def test_api_endpoint(client):
+    response = client.get('/api/v1/items')
+    assert response.status_code == 200
+    assert 'items' in response.json()
+
+def test_database_operations(db_session):
+    item = create_item(db_session, {'name': 'Test'})
+    assert item.id is not None
+    
+    retrieved = get_item(db_session, item.id)
+    assert retrieved.name == 'Test'
+```
+
+### Continuous Integration
+
+```yaml
+# .github/workflows/tests.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      - name: Run tests
+        run: pytest --cov=app
+```"""
+    
     def _generate_license(self) -> str:
         """Generate license section."""
-        return """## License
+        return """## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -1188,8 +1862,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
     
     def _has_api(self, analysis_result: Dict[str, Any]) -> bool:
         """Check if project has API."""
-        deps = [d.lower() for d in analysis_result.get('dependencies', [])]
-        return any(api in deps for api in ['flask', 'django', 'fastapi', 'express'])
+        deps = analysis_result.get('dependencies', [])
+        # Handle both old (list of strings) and new (list of dicts) formats
+        if deps and isinstance(deps[0], dict):
+            dep_names = [d.get('name', '').lower() for d in deps]
+        else:
+            dep_names = [d.lower() for d in deps]
+        
+        # Also check if API endpoints were found
+        has_endpoints = len(analysis_result.get('api_endpoints', [])) > 0
+        
+        return any(api in dep_names for api in ['flask', 'django', 'fastapi', 'express']) or has_endpoints
     
     def _get_feature_description(self, feature: str, project_name: str) -> str:
         """Get detailed feature description."""
@@ -1669,6 +2352,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
                     include_live_diagrams=include_diagrams,
                     output_path=output_path
                 )
+            elif format.lower() == 'pdf':
+                from xhtml2pdf import pisa
+                html_content = self.generate_interactive_documentation(
+                    analysis_result=analysis_result,
+                    title=title or "Documentation",
+                    theme=theme,
+                    include_search=include_search,
+                    include_navigation=include_toc,
+                    include_live_diagrams=include_diagrams,
+                    output_path=None  # Don't write HTML to file
+                )
+                with open(output_path, "w+b") as pdf_file:
+                    pisa_status = pisa.CreatePDF(
+                        html_content,                # the HTML to convert
+                        dest=pdf_file)           # file handle to receive result
+
+                return output_path
             elif format.lower() in ['md', 'markdown']:
                 # Generate markdown
                 project_name = title or "Project"

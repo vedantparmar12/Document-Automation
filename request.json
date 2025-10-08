@@ -1,0 +1,1 @@
+{"jsonrpc": "2.0", "method": "tools/call", "params": {"name": "analyze_codebase", "arguments": {"path": "C:\\Users\\vedan\\Desktop\\mcp-rag\\Document Automation\\", "source_type": "local"}}, "id": 1}
