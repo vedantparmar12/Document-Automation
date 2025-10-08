@@ -2,6 +2,7 @@
 
 A powerful Python-based documentation automation tool that analyzes codebases and generates comprehensive documentation with multiple export formats.
 
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -19,7 +20,47 @@ A powerful Python-based documentation automation tool that analyzes codebases an
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
+
 ## Overview
+
+Document-Automation is a powerful Python-based tool designed to automatically analyze codebases and generate comprehensive documentation. It provides intelligent codebase analysis, multiple output formats, and professional-grade documentation generation capabilities.
+
+### Why Use Document-Automation?
+
+- **Comprehensive Analysis**: Deep codebase inspection with AST parsing
+- **Multiple Formats**: Generate HTML, PDF, Markdown, and interactive documentation
+- **Professional Quality**: Enterprise-ready documentation with modern themes
+- **Automated Workflows**: Reduce manual documentation overhead
+- **Framework Detection**: Intelligent technology stack analysis
+- **Database Integration**: Schema analysis and ER diagram generation
+
+## Features
+
+### Core Capabilities
+- **Codebase Analysis**: Complete project structure analysis with metrics
+- **AST Parsing**: Deep code analysis for Python and JavaScript
+- **Framework Detection**: Automatic technology stack identification
+- **Database Schema Analysis**: SQL schema extraction and visualization
+- **Security Analysis**: Code security assessment and recommendations
+- **Interactive Documentation**: Modern, searchable documentation interfaces
+
+### Output Formats
+- Interactive HTML with search and navigation
+- Professional PDF reports
+- Markdown documentation
+- Confluence-ready content
+- JSON data exports
+- LaTeX and academic formats
+
+### Advanced Features
+- **Mermaid Diagrams**: Architecture and database relationship diagrams
+- **Multi-language Support**: Internationalization capabilities
+- **Custom Themes**: Modern, dark, corporate, and minimal themes
+- **Accessibility Compliance**: WCAG 2.1 AA compliant output
+- **Responsive Design**: Mobile-friendly documentation
+- **Background Processing**: Handle large codebases efficiently
+
+## Architecture
 
 Document Automation is an advanced documentation generation tool designed to analyze codebases and automatically create comprehensive, professional documentation. Built with Python and leveraging modern technologies like FastAPI, AST parsing, and multiple export formats, this tool streamlines the documentation process for developers and teams.
 
@@ -54,7 +95,20 @@ Document Automation is an advanced documentation generation tool designed to ana
 - **API Endpoint Discovery**: Automatically documents REST APIs
 - **Database Schema Visualization**: ER diagrams and relationship mapping
 
-## Architecture
+
+### System Components
+
+#### 1. Analyzers Module (`src/analyzers/`)
+- **BaseAnalyzer**: Core analysis functionality
+- **CodebaseAnalyzer**: Project structure and file analysis
+- **DatabaseAnalyzer**: SQL schema and relationship analysis
+- **FrameworkDetector**: Technology stack identification
+
+#### 2. Parsers Module (`src/parsers/`)
+- **ASTAnalyzer**: Abstract syntax tree parsing
+- **PythonParser**: Python-specific code analysis
+- **JavaScriptParser**: JavaScript code analysis
+- **ParserFactory**: Language-agnostic parser selection
 
 ### System Architecture
 
@@ -196,46 +250,74 @@ celery>=5.3.4
 redis>=5.0.1
 ```
 
+
+### Required Dependencies
+```bash
+# Core dependencies
+fastapi>=0.68.0
+uvicorn[standard]>=0.15.0
+pydantic>=1.8.0
+sqlalchemy>=1.4.0
+requests>=2.25.0
+
+# Analysis libraries
+tree-sitter>=0.20.0
+tree-sitter-python>=0.20.0
+tree-sitter-javascript>=0.20.0
+gitpython>=3.1.0
+
+# Documentation generation
+jinja2>=3.0.0
+markdown>=3.3.0
+weasyprint>=54.0
+matplotlib>=3.3.0
+plotly>=5.0.0
+mermaid-py>=0.3.0
+
+# Optional dependencies
+redis>=4.0.0  # For caching
+celery>=5.2.0  # For background processing
+```
+
 ## Installation
 
-### Method 1: Clone and Install
-
+### Method 1: pip Installation (Recommended)
 ```bash
-# Clone the repository
+# Install from PyPI (when available)
+pip install document-automation
+
+# Or install from source
+git clone https://github.com/vedantparmar12/Document-Automation.git
+cd Document-Automation
+pip install -r requirements.txt
+```
+
+### Method 2: Docker Installation
+```bash
+# Pull the Docker image
+docker pull vedantparmar12/document-automation:latest
+
+# Run with volume mounting
+docker run -v /path/to/your/project:/app/input \
+           -v /path/to/output:/app/output \
+           vedantparmar12/document-automation:latest
+```
+
+### Method 3: Development Setup
+```bash
+# Clone repository
 git clone https://github.com/vedantparmar12/Document-Automation.git
 cd Document-Automation
 
 # Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-```
 
-### Method 2: Using pip (when published)
-
-```bash
-pip install document-automation
-```
-
-### Method 3: Development Setup
-
-```bash
-# Clone and setup for development
-git clone https://github.com/vedantparmar12/Document-Automation.git
-cd Document-Automation
-
-# Install in development mode
-pip install -e .
-
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Run development server
+python run_server.py
 ```
 
 ## Configuration
