@@ -23,8 +23,61 @@ class CodebaseAnalyzer(BaseAnalyzer):
     Inherits from `BaseAnalyzer` to provide specific analysis implementation.
     """
     
-    async def _analyze_dependencies(self) -> List[str]:
-        """Analyze project dependencies."""
+    async def analyze(self) -> Dict[str, Any]:
+        """
+        Enhanced analysis method that adds MCP detection and semantic classification.
+        """
+        # First run the base analysis
+        base_result = await super().analyze()
+        
+        # If base analysis failed, return immediately
+        if not base_result.success:
+            return base_result
+        
+        try:
+            logger.info("Running enhanced analysis for MCP detection and classification...")
+            
+            # Import enhanced analyzer
+            from .enhanced_analyzer import EnhancedAnalyzer
+            
+            # Collect Python file contents for analysis
+            file_contents = {}
+            for root, dirs, files in os.walk(self.working_path):
+                for file in files:
+                    if file.endswith('.py'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                rel_path = os.path.relpath(file_path, self.working_path)
+                                file_contents[rel_path] = f.read()
+                        except Exception as e:
+                            logger.warning(f"Could not read {file_path}: {e}")
+                            continue
+            
+            if file_contents:
+                enhanced_analyzer = EnhancedAnalyzer()
+                enhanced_results = enhanced_analyzer.analyze(
+                    codebase_path=self.working_path,
+                    file_contents=file_contents,
+                    dependencies=base_result.data.get('dependencies', []),
+                    project_structure=base_result.data.get('project_structure', {})
+                )
+                
+                # Add enhanced analysis to results
+                base_result.data['classification'] = enhanced_results.get('classification')
+                base_result.data['mcp_server_info'] = enhanced_results.get('mcp_server_info')
+                base_result.data['specialized_analysis'] = enhanced_results.get('specialized_analysis')
+                
+                classification = enhanced_results.get('classification', {})
+                logger.info(f"Enhanced analysis complete: {classification.get('primary_type', 'unknown')}")
+        except Exception as e:
+            logger.warning(f"Enhanced analysis failed: {e}, continuing with base results")
+            # Continue with regular results if enhanced analysis fails
+        
+        return base_result
+    
+    async def _analyze_dependencies(self) -> List[Dict[str, Any]]:
+        """Analyze project dependencies with versions."""
         logger.info(f"Analyzing dependencies for {self.path}")
         dependencies = []
         
@@ -37,11 +90,23 @@ class CodebaseAnalyzer(BaseAnalyzer):
                     with open(req_path, 'r') as f:
                         for line in f:
                             line = line.strip()
-                            if line and not line.startswith('#'):
-                                # Extract package name (remove version specifiers)
-                                pkg = line.split('==')[0].split('>=')[0].split('<=')[0].split('>')[0].split('<')[0].strip()
-                                if pkg:
-                                    dependencies.append(pkg)
+                            if line and not line.startswith('#') and not line.startswith('-'):
+                                # Parse: package==1.0.0 or package>=1.0.0 or package
+                                match = re.match(r'^([a-zA-Z0-9_\-\[\]]+)([>=<~!]=?)(.+)?$', line)
+                                if match:
+                                    name = match.group(1).strip()
+                                    operator = match.group(2) if match.group(2) else None
+                                    version = match.group(3).strip() if match.group(3) else None
+                                    
+                                    # Skip if already added
+                                    if not any(d['name'] == name for d in dependencies):
+                                        dependencies.append({
+                                            'name': name,
+                                            'version': version if version else 'latest',
+                                            'operator': operator if operator else '',
+                                            'source': req_file,
+                                            'type': 'python'
+                                        })
                 except Exception as e:
                     logger.warning(f"Error reading {req_file}: {e}")
         
@@ -51,10 +116,7 @@ class CodebaseAnalyzer(BaseAnalyzer):
             try:
                 with open(setup_py, 'r') as f:
                     content = f.read()
-                    # Basic parsing for install_requires
                     if 'install_requires' in content:
-                        # This is a simple approach - could be improved with AST parsing
-                        import re
                         pattern = r'install_requires\s*=\s*\[(.*?)\]'
                         match = re.search(pattern, content, re.DOTALL)
                         if match:
@@ -62,9 +124,19 @@ class CodebaseAnalyzer(BaseAnalyzer):
                             for line in requires.split(','):
                                 line = line.strip().strip('"').strip("'")
                                 if line:
-                                    pkg = line.split('==')[0].split('>=')[0].split('<=')[0].strip()
-                                    if pkg and pkg not in dependencies:
-                                        dependencies.append(pkg)
+                                    match = re.match(r'^([a-zA-Z0-9_\-\[\]]+)([>=<~!]=?)(.+)?$', line)
+                                    if match:
+                                        name = match.group(1).strip()
+                                        if not any(d['name'] == name for d in dependencies):
+                                            operator = match.group(2) if match.group(2) else None
+                                            version = match.group(3).strip() if match.group(3) else None
+                                            dependencies.append({
+                                                'name': name,
+                                                'version': version if version else 'latest',
+                                                'operator': operator if operator else '',
+                                                'source': 'setup.py',
+                                                'type': 'python'
+                                            })
             except Exception as e:
                 logger.warning(f"Error reading setup.py: {e}")
         
@@ -72,29 +144,216 @@ class CodebaseAnalyzer(BaseAnalyzer):
         package_json = os.path.join(self.working_path, 'package.json')
         if os.path.exists(package_json):
             try:
-                import json
                 with open(package_json, 'r') as f:
                     data = json.load(f)
                     for dep_type in ['dependencies', 'devDependencies']:
                         if dep_type in data:
-                            dependencies.extend(list(data[dep_type].keys()))
+                            for name, version in data[dep_type].items():
+                                if not any(d['name'] == name for d in dependencies):
+                                    dependencies.append({
+                                        'name': name,
+                                        'version': version.lstrip('^~'),
+                                        'operator': version[0] if version and version[0] in ['^', '~'] else '',
+                                        'source': 'package.json',
+                                        'type': 'javascript',
+                                        'dev': dep_type == 'devDependencies'
+                                    })
             except Exception as e:
                 logger.warning(f"Error reading package.json: {e}")
         
-        # Remove duplicates and return
-        return list(set(dependencies))
+        logger.info(f"Found {len(dependencies)} dependencies")
+        return dependencies
 
     async def _extract_api_endpoints(self) -> List[Dict[str, Any]]:
-        """Extract API endpoints."""
-        # Placeholder for API extraction logic
+        """Extract API endpoints from Flask, FastAPI, Django, Express."""
         logger.info(f"Extracting API endpoints for {self.path}")
-        return []
+        endpoints = []
+        
+        try:
+            # Extract from Python files (Flask, FastAPI, Django)
+            for root, dirs, files in os.walk(self.working_path):
+                # Skip common non-code directories
+                dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'node_modules', 'venv', '.env']]
+                
+                for file in files:
+                    if file.endswith('.py'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                
+                                # Flask: @app.route() or @bp.route()
+                                flask_pattern = r'@(?:app|bp|blueprint)\.route\([\'"]([^\'"]+)[\'"](?:,\s*methods=\[([^\]]+)\])?\)'
+                                for match in re.finditer(flask_pattern, content):
+                                    path, methods = match.groups()
+                                    endpoints.append({
+                                        'path': path,
+                                        'methods': methods.replace("'", "").replace('"', '').replace(' ', '') if methods else 'GET',
+                                        'framework': 'Flask',
+                                        'file': os.path.relpath(file_path, self.working_path)
+                                    })
+                                
+                                # FastAPI: @app.get(), @app.post(), @router.get(), etc.
+                                fastapi_pattern = r'@(?:app|router)\.(?P<method>get|post|put|delete|patch|options|head)\([\'"](?P<path>[^\'"]+)[\'"]'
+                                for match in re.finditer(fastapi_pattern, content):
+                                    method = match.group('method').upper()
+                                    path = match.group('path')
+                                    endpoints.append({
+                                        'path': path,
+                                        'methods': method,
+                                        'framework': 'FastAPI',
+                                        'file': os.path.relpath(file_path, self.working_path)
+                                    })
+                                
+                                # Django: path() and re_path() in urls.py
+                                if 'urls.py' in file:
+                                    django_pattern = r'(?:path|re_path)\([\'"]([^\'"]+)[\'"]'
+                                    for match in re.finditer(django_pattern, content):
+                                        path = match.group(1)
+                                        endpoints.append({
+                                            'path': f'/{path}',
+                                            'methods': 'GET,POST',
+                                            'framework': 'Django',
+                                            'file': os.path.relpath(file_path, self.working_path)
+                                        })
+                        except Exception as e:
+                            logger.debug(f"Error reading {file_path}: {e}")
+                    
+                    # Extract from JavaScript/TypeScript files (Express)
+                    elif file.endswith(('.js', '.ts')):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                
+                                # Express: app.get(), router.post(), etc.
+                                express_pattern = r'(?:app|router)\.(?P<method>get|post|put|delete|patch|all|use)\([\'"`](?P<path>[^\'"` ]+)[\'"`]'
+                                for match in re.finditer(express_pattern, content):
+                                    method = match.group('method').upper()
+                                    path = match.group('path')
+                                    if not path.startswith('('):  # Skip middleware patterns
+                                        endpoints.append({
+                                            'path': path,
+                                            'methods': method if method != 'USE' else 'ALL',
+                                            'framework': 'Express',
+                                            'file': os.path.relpath(file_path, self.working_path)
+                                        })
+                        except Exception as e:
+                            logger.debug(f"Error reading {file_path}: {e}")
+            
+            # Remove duplicates based on path and method
+            seen = set()
+            unique_endpoints = []
+            for ep in endpoints:
+                key = (ep['path'], ep['methods'])
+                if key not in seen:
+                    seen.add(key)
+                    unique_endpoints.append(ep)
+            
+            logger.info(f"Found {len(unique_endpoints)} API endpoints")
+            return unique_endpoints
+            
+        except Exception as e:
+            logger.error(f"Error extracting API endpoints: {e}")
+            return []
 
     async def _analyze_architecture(self) -> Dict[str, Any]:
-        """Analyze architecture."""
-        # Placeholder for architecture analysis
+        """Analyze project architecture and detect patterns."""
         logger.info(f"Analyzing architecture for {self.path}")
-        return {}
+        
+        architecture = {
+            'layers': [],
+            'components': [],
+            'patterns': [],
+            'entry_points': [],
+            'directory_structure': {}
+        }
+        
+        try:
+            # Analyze directory structure to detect architectural layers
+            for root, dirs, files in os.walk(self.working_path):
+                # Skip common non-code directories
+                dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'node_modules', 'venv', '.env', 'dist', 'build']]
+                
+                rel_path = os.path.relpath(root, self.working_path)
+                dir_name = os.path.basename(root)
+                
+                # Detect architectural layers
+                layer_mappings = {
+                    'controllers': 'Presentation Layer',
+                    'views': 'Presentation Layer', 
+                    'routes': 'API Layer',
+                    'api': 'API Layer',
+                    'models': 'Data Access Layer',
+                    'database': 'Data Access Layer',
+                    'db': 'Data Access Layer',
+                    'services': 'Business Logic Layer',
+                    'core': 'Business Logic Layer',
+                    'business': 'Business Logic Layer',
+                    'utils': 'Utility Layer',
+                    'helpers': 'Utility Layer',
+                    'middleware': 'Middleware Layer',
+                    'config': 'Configuration Layer',
+                    'tests': 'Testing Layer',
+                    'migrations': 'Database Migration Layer'
+                }
+                
+                for keyword, layer in layer_mappings.items():
+                    if keyword in dir_name.lower():
+                        if layer not in architecture['layers']:
+                            architecture['layers'].append(layer)
+                        
+                        architecture['components'].append({
+                            'name': dir_name,
+                            'layer': layer,
+                            'path': rel_path,
+                            'files': len(files)
+                        })
+                        break
+                
+                # Store directory structure
+                if rel_path != '.' and len(files) > 0:
+                    architecture['directory_structure'][rel_path] = {
+                        'files': len(files),
+                        'subdirs': len(dirs)
+                    }
+            
+            # Detect entry points
+            entry_files = [
+                'main.py', 'app.py', 'server.py', 'run.py', '__main__.py',
+                'index.js', 'server.js', 'app.js', 'main.js',
+                'index.ts', 'server.ts', 'app.ts', 'main.ts'
+            ]
+            
+            for entry in entry_files:
+                entry_path = os.path.join(self.working_path, entry)
+                if os.path.exists(entry_path):
+                    architecture['entry_points'].append(entry)
+            
+            # Detect architectural patterns
+            if 'models' in str(architecture['components']) and 'views' in str(architecture['components']) and 'controllers' in str(architecture['components']):
+                architecture['patterns'].append('MVC (Model-View-Controller)')
+            
+            if 'services' in str(architecture['components']) and 'models' in str(architecture['components']):
+                architecture['patterns'].append('Service Layer Pattern')
+            
+            if 'api' in str(architecture['components']) or 'routes' in str(architecture['components']):
+                architecture['patterns'].append('RESTful API Architecture')
+            
+            if 'middleware' in str(architecture['components']):
+                architecture['patterns'].append('Middleware Pattern')
+            
+            # Detect microservices indicators
+            docker_compose = os.path.join(self.working_path, 'docker-compose.yml')
+            if os.path.exists(docker_compose):
+                architecture['patterns'].append('Microservices Architecture')
+            
+            logger.info(f"Detected {len(architecture['layers'])} architectural layers and {len(architecture['patterns'])} patterns")
+            return architecture
+            
+        except Exception as e:
+            logger.error(f"Error analyzing architecture: {e}")
+            return architecture
 
     async def _calculate_metrics(self) -> Dict[str, Any]:
         """Calculate code metrics."""
@@ -177,10 +436,11 @@ class CodebaseAnalyzer(BaseAnalyzer):
         return await self.analyze()
     
     async def _detect_frameworks(self) -> List[Dict[str, Any]]:
-        """Detect frameworks and technology stack."""
+        """Detect frameworks and technology stack with confidence scores."""
         logger.info(f"Detecting frameworks for {self.path}")
         
         frameworks = []
+        framework_indicators = {}
         
         # Check for Python frameworks
         requirements_files = ['requirements.txt', 'setup.py', 'pyproject.toml']
@@ -322,10 +582,145 @@ class CodebaseAnalyzer(BaseAnalyzer):
         return schemas
     
     async def _parse_code_ast(self) -> List[Dict[str, Any]]:
-        """Parse code using AST for detailed analysis."""
+        """Parse code using AST for detailed analysis with complexity metrics."""
         logger.info(f"Parsing AST for {self.path}")
         
         ast_data = []
+        
+        try:
+            import ast as python_ast
+            
+            # Find all Python files
+            for root, dirs, files in os.walk(self.working_path):
+                # Skip common non-code directories
+                dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'node_modules', 'venv', '.env']]
+                
+                for file in files:
+                    if file.endswith('.py'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                source_code = f.read()
+                                tree = python_ast.parse(source_code)
+                                
+                                file_analysis = {
+                                    'file': os.path.relpath(file_path, self.working_path),
+                                    'functions': [],
+                                    'classes': [],
+                                    'imports': [],
+                                    'total_complexity': 0,
+                                    'lines_of_code': len(source_code.splitlines()),
+                                    'maintainability_index': 0
+                                }
+                                
+                                # Extract imports
+                                for node in python_ast.walk(tree):
+                                    if isinstance(node, python_ast.Import):
+                                        for alias in node.names:
+                                            file_analysis['imports'].append(alias.name)
+                                    elif isinstance(node, python_ast.ImportFrom):
+                                        if node.module:
+                                            file_analysis['imports'].append(node.module)
+                                
+                                # Analyze functions
+                                for node in python_ast.walk(tree):
+                                    if isinstance(node, python_ast.FunctionDef):
+                                        complexity = self._calculate_cyclomatic_complexity(node)
+                                        
+                                        # Count parameters
+                                        num_params = len(node.args.args)
+                                        
+                                        # Calculate lines
+                                        if hasattr(node, 'end_lineno') and hasattr(node, 'lineno'):
+                                            lines = node.end_lineno - node.lineno
+                                        else:
+                                            lines = 0
+                                        
+                                        # Determine complexity rating
+                                        if complexity <= 5:
+                                            rating = 'Simple'
+                                        elif complexity <= 10:
+                                            rating = 'Moderate'
+                                        elif complexity <= 20:
+                                            rating = 'Complex'
+                                        else:
+                                            rating = 'Very Complex'
+                                        
+                                        function_info = {
+                                            'name': node.name,
+                                            'complexity': complexity,
+                                            'complexity_rating': rating,
+                                            'parameters': num_params,
+                                            'lines': lines,
+                                            'is_async': isinstance(node, python_ast.AsyncFunctionDef)
+                                        }
+                                        
+                                        file_analysis['functions'].append(function_info)
+                                        file_analysis['total_complexity'] += complexity
+                                    
+                                    elif isinstance(node, python_ast.ClassDef):
+                                        # Analyze class
+                                        methods = [n for n in node.body if isinstance(n, (python_ast.FunctionDef, python_ast.AsyncFunctionDef))]
+                                        
+                                        if hasattr(node, 'end_lineno') and hasattr(node, 'lineno'):
+                                            lines = node.end_lineno - node.lineno
+                                        else:
+                                            lines = 0
+                                        
+                                        class_info = {
+                                            'name': node.name,
+                                            'methods': len(methods),
+                                            'lines': lines,
+                                            'has_init': any(m.name == '__init__' for m in methods)
+                                        }
+                                        
+                                        file_analysis['classes'].append(class_info)
+                                
+                                # Calculate maintainability index (simplified version)
+                                # MI = 171 - 5.2 * ln(V) - 0.23 * G - 16.2 * ln(LOC)
+                                # Simplified: Higher is better, max 100
+                                if file_analysis['lines_of_code'] > 0:
+                                    import math
+                                    loc = file_analysis['lines_of_code']
+                                    complexity = file_analysis['total_complexity'] if file_analysis['total_complexity'] > 0 else 1
+                                    
+                                    mi = max(0, min(100, 
+                                        171 - 5.2 * math.log(loc) - 0.23 * complexity - 16.2 * math.log(loc)
+                                    ))
+                                    file_analysis['maintainability_index'] = round(mi, 2)
+                                
+                                ast_data.append(file_analysis)
+                                
+                        except SyntaxError as e:
+                            logger.debug(f"Syntax error in {file_path}: {e}")
+                        except Exception as e:
+                            logger.debug(f"Error parsing {file_path}: {e}")
+            
+            logger.info(f"Parsed {len(ast_data)} Python files with AST")
+            return ast_data
+            
+        except Exception as e:
+            logger.error(f"Error in AST parsing: {e}")
+            return []
+    
+    def _calculate_cyclomatic_complexity(self, node) -> int:
+        """Calculate cyclomatic complexity of a function using AST."""
+        import ast as python_ast
+        
+        complexity = 1  # Base complexity
+        
+        for child in python_ast.walk(node):
+            # Decision points that increase complexity
+            if isinstance(child, (python_ast.If, python_ast.While, python_ast.For, 
+                                 python_ast.ExceptHandler, python_ast.With)):
+                complexity += 1
+            elif isinstance(child, python_ast.BoolOp):
+                # Each additional boolean operator (and/or)
+                complexity += len(child.values) - 1
+            elif isinstance(child, (python_ast.Break, python_ast.Continue)):
+                complexity += 1
+        
+        return complexity
         
         # Look for Python files
         python_files = []
