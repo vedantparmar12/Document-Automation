@@ -137,7 +137,7 @@ class DirectoryInfo(BaseModel):
 # Code analysis results
 class CodeAnalysisResult(BaseModel):
     project_structure: DirectoryInfo
-    dependencies: List[str]
+    dependencies: List[Dict[str, Any]]  # Changed from List[str] to support detailed dependency info
     api_endpoints: List[Dict[str, Any]]
     architecture_info: Dict[str, Any]
     metrics: Dict[str, Any]

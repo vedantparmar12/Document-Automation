@@ -43,6 +43,7 @@ weasyprint
 pypdf2
 openpyxl
 xlsxwriter
+xhtml2pdf
 
 # HTML processing
 beautifulsoup4
