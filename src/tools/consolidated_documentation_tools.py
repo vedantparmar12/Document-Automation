@@ -545,6 +545,11 @@ class ConsolidatedDocumentationTools:
                     })
             
             # 3. Auto-export to multiple formats (if requested)
+            if auto_export_formats is None:
+                auto_export_formats = []
+            if format not in auto_export_formats:
+                auto_export_formats.append(format)
+
             exported_files = []
             if auto_export_formats:
                 logger.info(f"Auto-exporting to {len(auto_export_formats)} additional formats...")
@@ -1032,9 +1037,9 @@ class ConsolidatedDocumentationTools:
         complexity_scores = []
         for file_data in ast_data:
             if isinstance(file_data, dict):
-                metrics['total_classes'] += file_data.get('classes', 0)
-                metrics['total_functions'] += file_data.get('functions', 0)
-                metrics['total_imports'] += file_data.get('imports', 0)
+                metrics['total_classes'] += len(file_data.get('classes', []))
+                metrics['total_functions'] += len(file_data.get('functions', []))
+                metrics['total_imports'] += len(file_data.get('imports', []))
                 metrics['total_lines'] += file_data.get('lines', 0)
                 metrics['languages'].add(file_data.get('language', 'unknown'))
                 

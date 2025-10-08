@@ -27,25 +27,9 @@ from pydantic import BaseModel, Field
 print(f"[DEBUG] Starting server from: {__file__}", file=sys.stderr)
 print(f"[DEBUG] Python path: {sys.path}", file=sys.stderr)
 
-try:
-    from src.tools.consolidated_documentation_tools import ConsolidatedDocumentationTools
-    from src.analyzers.codebase_analyzer import CodebaseAnalyzer
-    from src.generators.documentation_generator import DocumentationGenerator
-    print("[DEBUG] Successfully imported all modules", file=sys.stderr)
-except Exception as e:
-    print(f"[DEBUG] Import error: {e}", file=sys.stderr)
-    # Create dummy classes to allow server to start
-    class ConsolidatedDocumentationTools:
-        async def analyze_codebase(self, **kwargs):
-            return [TextContent(type="text", text="analyze_codebase not implemented")]
-        async def generate_documentation(self, **kwargs):
-            return [TextContent(type="text", text="generate_documentation not implemented")]
-        async def list_project_structure(self, **kwargs):
-            return [TextContent(type="text", text="list_project_structure not implemented")]
-        async def extract_api_endpoints(self, **kwargs):
-            return [TextContent(type="text", text="extract_api_endpoints not implemented")]
-        async def analyze_dependencies(self, **kwargs):
-            return [TextContent(type="text", text="analyze_dependencies not implemented")]
+from src.tools.consolidated_documentation_tools import ConsolidatedDocumentationTools
+from src.analyzers.codebase_analyzer import CodebaseAnalyzer
+from src.generators.documentation_generator import DocumentationGenerator
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

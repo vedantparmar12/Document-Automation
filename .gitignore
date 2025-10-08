@@ -42,6 +42,8 @@ ENV/
 # Logs
 *.log
 logs/
+docs
+exports
 
 # Database
 *.db
