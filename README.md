@@ -1,955 +1,565 @@
-# Document Automation - Comprehensive Documentation
+# 📚 Document Automation MCP Server
 
-A powerful Python-based documentation automation tool that analyzes codebases and generates comprehensive documentation with multiple export formats.
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+A powerful Model Context Protocol (MCP) server that provides intelligent codebase analysis, comprehensive documentation generation, and multi-format export capabilities. Built for seamless integration with Claude and other AI assistants.
 
-## Table of Contents
+---
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [License](#license)
+## ✨ Features
 
+### 🔍 **Intelligent Codebase Analysis**
+- **AST Parsing**: Deep analysis of Python and JavaScript code structures
+- **Framework Detection**: Automatically identifies frameworks (React, Flask, Django, FastAPI, etc.)
+- **Database Schema Analysis**: Extracts and visualizes database relationships
+- **API Endpoint Discovery**: Maps REST endpoints with methods and parameters
+- **Security Scanning**: Identifies potential vulnerabilities and best practices
+- **Dependency Tracking**: Analyzes project dependencies and versions
 
-## Overview
+### 📝 **Professional Documentation Generation**
+- **Multiple Formats**: Markdown, HTML, PDF, DOCX, Confluence, Notion, JSON, EPUB
+- **Interactive Documentation**: Search, navigation, syntax highlighting
+- **Mermaid Diagrams**: Architecture, database ER, API flows, dependency graphs
+- **Multi-language Support**: Built-in internationalization
+- **Custom Themes**: Modern, minimal, dark, corporate, and more
+- **Accessibility Compliant**: WCAG 2.1 AA standards
 
-Document-Automation is a powerful Python-based tool designed to automatically analyze codebases and generate comprehensive documentation. It provides intelligent codebase analysis, multiple output formats, and professional-grade documentation generation capabilities.
+### 🚀 **Advanced Capabilities**
+- **Pagination Support**: Handles large repositories efficiently
+- **Background Processing**: Async analysis for better performance
+- **Smart Chunking**: Token-aware content splitting
+- **Concurrent Analysis**: Parallel file processing
+- **Export Automation**: Batch export to multiple formats
+- **Archive Generation**: ZIP, TAR, TAR.GZ support
 
-### Why Use Document-Automation?
+---
 
-- **Comprehensive Analysis**: Deep codebase inspection with AST parsing
-- **Multiple Formats**: Generate HTML, PDF, Markdown, and interactive documentation
-- **Professional Quality**: Enterprise-ready documentation with modern themes
-- **Automated Workflows**: Reduce manual documentation overhead
-- **Framework Detection**: Intelligent technology stack analysis
-- **Database Integration**: Schema analysis and ER diagram generation
+## 📋 Table of Contents
 
-## Features
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Configuration](#-configuration)
+- [Usage Examples](#-usage-examples)
+- [API Reference](#-api-reference)
+- [Project Structure](#-project-structure)
+- [Architecture](#-architecture)
+- [Development](#-development)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-### Core Capabilities
-- **Codebase Analysis**: Complete project structure analysis with metrics
-- **AST Parsing**: Deep code analysis for Python and JavaScript
-- **Framework Detection**: Automatic technology stack identification
-- **Database Schema Analysis**: SQL schema extraction and visualization
-- **Security Analysis**: Code security assessment and recommendations
-- **Interactive Documentation**: Modern, searchable documentation interfaces
+---
 
-### Output Formats
-- Interactive HTML with search and navigation
-- Professional PDF reports
-- Markdown documentation
-- Confluence-ready content
-- JSON data exports
-- LaTeX and academic formats
+## 🚀 Installation
 
-### Advanced Features
-- **Mermaid Diagrams**: Architecture and database relationship diagrams
-- **Multi-language Support**: Internationalization capabilities
-- **Custom Themes**: Modern, dark, corporate, and minimal themes
-- **Accessibility Compliance**: WCAG 2.1 AA compliant output
-- **Responsive Design**: Mobile-friendly documentation
-- **Background Processing**: Handle large codebases efficiently
+### Prerequisites
 
-## Architecture
-
-Document Automation is an advanced documentation generation tool designed to analyze codebases and automatically create comprehensive, professional documentation. Built with Python and leveraging modern technologies like FastAPI, AST parsing, and multiple export formats, this tool streamlines the documentation process for developers and teams.
-
-### Why Use Document Automation?
-
-- **Automated Analysis**: Automatically analyzes your codebase structure, dependencies, and architecture
-- **Multiple Formats**: Export to HTML, PDF, Markdown, DOCX, and more
-- **Interactive Documentation**: Generate searchable, navigable documentation
-- **Framework Detection**: Automatically detects and documents frameworks and technologies
-- **Database Schema Analysis**: Analyzes and documents database structures
-- **Security Analysis**: Identifies potential security issues
-- **Mermaid Diagrams**: Auto-generates architecture and flow diagrams
-
-## Features
-
-### Core Features
-- 🔍 **Comprehensive Codebase Analysis**: AST parsing, dependency analysis, and framework detection
-- 📊 **Multiple Export Formats**: HTML, PDF, Markdown, DOCX, Confluence, Notion
-- 🎨 **Professional Themes**: Modern, minimal, dark, corporate, and custom themes
-- 🔒 **Security Analysis**: Built-in security scanning and vulnerability detection
-- 📈 **Interactive Diagrams**: Auto-generated Mermaid diagrams for architecture visualization
-- 🌐 **Multi-language Support**: Supports Python, JavaScript, and more
-- 📱 **Responsive Design**: Mobile-friendly documentation output
-- 🔍 **Search Functionality**: Full-text search in generated documentation
-- ♿ **Accessibility Compliance**: WCAG 2.1 AA compliant outputs
-
-### Advanced Features
-- **Concurrent Processing**: Multi-threaded analysis for large codebases
-- **Pagination Support**: Handle large repositories with smart pagination
-- **Background Processing**: Async processing for improved performance
-- **Custom CSS Support**: Inject custom styles for branding
-- **API Endpoint Discovery**: Automatically documents REST APIs
-- **Database Schema Visualization**: ER diagrams and relationship mapping
-
-
-### System Components
-
-#### 1. Analyzers Module (`src/analyzers/`)
-- **BaseAnalyzer**: Core analysis functionality
-- **CodebaseAnalyzer**: Project structure and file analysis
-- **DatabaseAnalyzer**: SQL schema and relationship analysis
-- **FrameworkDetector**: Technology stack identification
-
-#### 2. Parsers Module (`src/parsers/`)
-- **ASTAnalyzer**: Abstract syntax tree parsing
-- **PythonParser**: Python-specific code analysis
-- **JavaScriptParser**: JavaScript code analysis
-- **ParserFactory**: Language-agnostic parser selection
-
-### System Architecture
-
-```mermaid
-flowchart TB
-    title["Document-Automation Architecture"]
-    
-    subgraph "Input Layer"
-        A[Code Repository]
-        B[Configuration Files]
-        C[Custom Templates]
-    end
-    
-    subgraph "Analysis Layer"
-        D[Codebase Analyzer]
-        E[AST Parser]
-        F[Framework Detector]
-        G[Database Analyzer]
-        H[Security Scanner]
-    end
-    
-    subgraph "Processing Layer"
-        I[Concurrent Processor]
-        J[Background Tasks]
-        K[Token Estimator]
-        L[Pagination Manager]
-    end
-    
-    subgraph "Generation Layer"
-        M[Documentation Generator]
-        N[Diagram Generator]
-        O[Template Engine]
-        P[Format Exporter]
-    end
-    
-    subgraph "Output Layer"
-        Q[HTML Documentation]
-        R[PDF Reports]
-        S[Markdown Files]
-        T[Interactive Docs]
-    end
-    
-    A --> D
-    B --> D
-    C --> O
-    D --> E
-    D --> F
-    D --> G
-    D --> H
-    E --> I
-    F --> I
-    G --> I
-    H --> I
-    I --> J
-    I --> K
-    I --> L
-    J --> M
-    K --> M
-    L --> M
-    M --> N
-    M --> O
-    M --> P
-    N --> Q
-    O --> Q
-    P --> R
-    P --> S
-    P --> T
-```
-
-### Component Overview
-
-#### Analyzers
-- **BaseAnalyzer**: Core analysis functionality
-- **CodebaseAnalyzer**: Repository structure analysis
-- **DatabaseAnalyzer**: Database schema analysis
-- **FrameworkDetector**: Technology stack detection
-
-#### Parsers
-- **ASTAnalyzer**: Abstract Syntax Tree parsing
-- **PythonParser**: Python-specific parsing
-- **JavaScriptParser**: JavaScript-specific parsing
-- **BaseParser**: Generic parsing functionality
-
-#### Generators
-- **DocumentationGenerator**: Core documentation generation
-- **InteractiveDocGenerator**: Interactive HTML generation
-- **ProfessionalDocGenerator**: Professional format generation
-
-#### Export & Processing
-- **FormatExporter**: Multi-format export capability
-- **ConcurrentAnalyzer**: Parallel processing
-- **BackgroundProcessor**: Async task management
-
-## Prerequisites
-
-### System Requirements
 - Python 3.8 or higher
-- Git (for repository analysis)
-- 4GB RAM minimum (8GB recommended for large projects)
-- 1GB free disk space
+- Git
+- Claude Desktop or MCP-compatible client
 
-### Required Dependencies
+### Using pip
 
-```python
-# Core Dependencies
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-pydantic>=2.5.0
-starlette>=0.27.0
-
-# Analysis & Parsing
-tree-sitter>=0.20.4
-tree-sitter-python>=0.20.4
-tree-sitter-javascript>=0.20.3
-gitpython>=3.1.40
-
-# Documentation Generation
-mkdocs>=1.5.3
-markdown-it-py>=3.0.0
-jinja2>=3.1.2
-markdown>=3.5.1
-
-# Export Formats
-reportlab>=4.0.7
-weasyprint>=60.2
-python-docx>=1.1.0
-openpyxl>=3.1.2
-
-# Visualization
-matplotlib>=3.8.2
-plotly>=5.17.0
-mermaid-py>=0.3.0
-
-# Processing
-pandas>=2.1.4
-numpy>=1.24.4
-sqlalchemy>=2.0.23
-celery>=5.3.4
-redis>=5.0.1
-```
-
-
-### Required Dependencies
 ```bash
-# Core dependencies
-fastapi>=0.68.0
-uvicorn[standard]>=0.15.0
-pydantic>=1.8.0
-sqlalchemy>=1.4.0
-requests>=2.25.0
-
-# Analysis libraries
-tree-sitter>=0.20.0
-tree-sitter-python>=0.20.0
-tree-sitter-javascript>=0.20.0
-gitpython>=3.1.0
-
-# Documentation generation
-jinja2>=3.0.0
-markdown>=3.3.0
-weasyprint>=54.0
-matplotlib>=3.3.0
-plotly>=5.0.0
-mermaid-py>=0.3.0
-
-# Optional dependencies
-redis>=4.0.0  # For caching
-celery>=5.2.0  # For background processing
-```
-
-## Installation
-
-### Method 1: pip Installation (Recommended)
-```bash
-# Install from PyPI (when available)
-pip install document-automation
-
-# Or install from source
+# Clone the repository
 git clone https://github.com/vedantparmar12/Document-Automation.git
 cd Document-Automation
-pip install -r requirements.txt
-```
-
-### Method 2: Docker Installation
-```bash
-# Pull the Docker image
-docker pull vedantparmar12/document-automation:latest
-
-# Run with volume mounting
-docker run -v /path/to/your/project:/app/input \
-           -v /path/to/output:/app/output \
-           vedantparmar12/document-automation:latest
-```
-
-### Method 3: Development Setup
-```bash
-# Clone repository
-git clone https://github.com/vedantparmar12/Document-Automation.git
-cd Document-Automation
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Run development server
-python run_server.py
 ```
 
-## Configuration
+### Using uv (Recommended)
+
+```bash
+# Install uv (if not already installed)
+pip install uv
+
+# Install dependencies with uv
+uv pip install -r requirements.txt
+```
+
+---
+
+## 🎯 Quick Start
+
+### 1. Configure Claude Desktop
+
+Add the following to your Claude Desktop configuration file:
+
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "document-automation": {
+      "command": "python",
+      "args": [
+        "C:\\path\\to\\Document-Automation\\run_server.py"
+      ]
+    }
+  }
+}
+```
+
+### 2. Start the Server
+
+```bash
+# Using Python directly
+python run_server.py
+
+# Or using uv
+uv run python run_server.py
+```
+
+### 3. Use in Claude
+
+Once configured, Claude can analyze codebases and generate documentation:
+
+```
+Analyze this repository: https://github.com/username/repo
+Generate comprehensive documentation in HTML format
+```
+
+---
+
+## ⚙️ Configuration
 
 ### Environment Variables
 
 Create a `.env` file in the project root:
 
 ```env
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
-DEBUG=True
-WORKERS=4
+# Analysis Settings
+MAX_FILES=1000
+MAX_TOKENS_PER_CHUNK=4000
+PAGINATION_STRATEGY=auto
 
-# Processing Configuration
-MAX_CONCURRENT_ANALYSES=3
-DEFAULT_TIMEOUT=300
-MAX_FILE_SIZE=10MB
+# Security Settings
+ENABLE_SECURITY_SCAN=true
+CONTENT_FILTERING=true
 
-# Export Configuration
+# Export Settings
+DEFAULT_OUTPUT_DIR=./docs
 DEFAULT_THEME=modern
-DEFAULT_FORMAT=interactive
-ENABLE_PDF_EXPORT=True
-ENABLE_SEARCH=True
-
-# Security Configuration
-VALIDATE_PATHS=True
-SANDBOX_MODE=False
-MAX_ANALYSIS_TIME=3600
-
-# External Services (Optional)
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=sqlite:///./analysis.db
+ENABLE_DIAGRAMS=true
 ```
 
-### Configuration File
+### MCP Server Configuration
 
-Create `config.yaml`:
+The server can be configured via `wrangler.toml` for Cloudflare Workers deployment:
 
-```yaml
-analysis:
-  max_files: 1000
-  include_patterns:
-    - "*.py"
-    - "*.js"
-    - "*.ts"
-    - "*.jsx"
-    - "*.tsx"
-    - "*.sql"
-  exclude_patterns:
-    - "node_modules"
-    - "__pycache__"
-    - ".git"
-    - "*.pyc"
-    - "dist"
-    - "build"
+```toml
+name = "document-automation"
+compatibility_date = "2024-01-01"
 
-documentation:
-  title: "Auto-Generated Documentation"
-  author: "Document Automation"
-  version: "1.0.0"
-  theme: "modern"
-  include_toc: true
-  include_search: true
-  include_diagrams: true
-
-export:
-  formats:
-    - html
-    - pdf
-    - markdown
-  output_dir: "./docs"
-  responsive_design: true
-  accessibility_compliance: true
-
-security:
-  validate_inputs: true
-  sanitize_paths: true
-  max_analysis_depth: 10
-  allowed_extensions:
-    - .py
-    - .js
-    - .ts
-    - .md
-    - .sql
+[env.production]
+vars = { ENVIRONMENT = "production" }
 ```
 
-## Usage
+---
 
-### Command Line Interface
+## 📖 Usage Examples
 
-```bash
-# Basic usage
-python -m document_automation analyze /path/to/project
-
-# With custom output format
-python -m document_automation analyze /path/to/project --format html --theme modern
-
-# Multiple formats
-python -m document_automation analyze /path/to/project --formats html,pdf,markdown
-
-# With custom configuration
-python -m document_automation analyze /path/to/project --config config.yaml
-
-# GitHub repository analysis
-python -m document_automation analyze-repo https://github.com/user/repo
-
-# Server mode
-python -m document_automation serve --host 0.0.0.0 --port 8000
-```
-
-### Web Server
-
-```bash
-# Start the web server
-python run_server.py
-
-# Or using uvicorn directly
-uvicorn src.server:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### Python API Usage
+### Analyze a Local Codebase
 
 ```python
-from src.analyzers import CodebaseAnalyzer
-from src.generators import DocumentationGenerator
-from src.export import FormatExporter
+from src.tools.consolidated_documentation_tools import analyze_codebase
 
-# Initialize components
-analyzer = CodebaseAnalyzer()
-generator = DocumentationGenerator()
-exporter = FormatExporter()
+result = analyze_codebase(
+    path="/path/to/project",
+    source_type="local",
+    include_ast_analysis=True,
+    include_mermaid_diagrams=True,
+    include_security_analysis=True
+)
 
-# Analyze codebase
-analysis_result = analyzer.analyze_repository("/path/to/project")
+print(f"Analysis ID: {result['analysis_id']}")
+print(f"Total Files: {result['metrics']['total_files']}")
+print(f"Frameworks: {result['technology_stack']['primary_technologies']}")
+```
 
-# Generate documentation
-documentation = generator.generate(
-    analysis_result,
+### Analyze a GitHub Repository
+
+```python
+result = analyze_codebase(
+    path="https://github.com/username/repo.git",
+    source_type="github",
+    include_api_endpoints=True,
+    include_database_analysis=True
+)
+```
+
+### Generate Documentation
+
+```python
+from src.tools.consolidated_documentation_tools import generate_documentation
+
+docs = generate_documentation(
+    analysis_id="analysis_20241212_123456_789",
+    format="interactive",
     theme="modern",
-    include_diagrams=True
+    include_toc=True,
+    include_search=True,
+    auto_export_formats=["pdf", "html", "markdown"]
 )
 
-# Export to multiple formats
-exporter.export_multiple(
-    documentation,
-    formats=["html", "pdf", "markdown"],
-    output_dir="./docs"
+print(f"Documentation generated: {docs['generated_files']}")
+```
+
+### Export to Multiple Formats
+
+```python
+from src.tools.consolidated_documentation_tools import export_documentation
+
+exports = export_documentation(
+    analysis_id="analysis_20241212_123456_789",
+    formats=["html", "pdf", "docx", "markdown"],
+    theme="corporate",
+    include_diagrams=True,
+    accessibility_compliance=True,
+    archive_formats=["zip"]
 )
+
+print(f"Exported {len(exports['exported_files'])} files")
 ```
 
-### REST API Usage
+---
 
+## 🔌 API Reference
+
+### Core Tools
+
+#### `analyze_codebase`
+
+Comprehensive codebase analysis with built-in features.
+
+**Parameters:**
+- `path` (str): Local path or GitHub URL
+- `source_type` (str): "local" or "github"
+- `include_ast_analysis` (bool): Enable AST parsing
+- `include_framework_detection` (bool): Detect frameworks
+- `include_database_analysis` (bool): Analyze database schemas
+- `include_mermaid_diagrams` (bool): Generate diagrams
+- `include_api_endpoints` (bool): Extract API routes
+- `include_security_analysis` (bool): Security scanning
+- `max_files` (int): Maximum files to analyze (default: 1000)
+- `pagination_strategy` (str): "auto", "file_by_file", "chunk_by_chunk", "smart"
+
+**Returns:**
 ```python
-import requests
-
-# Start analysis
-response = requests.post("http://localhost:8000/analyze", json={
-    "path": "/path/to/project",
-    "include_ast_analysis": True,
-    "include_security_analysis": True,
-    "formats": ["html", "pdf"]
-})
-
-analysis_id = response.json()["analysis_id"]
-
-# Check status
-status = requests.get(f"http://localhost:8000/status/{analysis_id}")
-
-# Download results
-docs = requests.get(f"http://localhost:8000/download/{analysis_id}")
-```
-
-## API Reference
-
-### Core Classes
-
-#### CodebaseAnalyzer
-
-```python
-class CodebaseAnalyzer:
-    """Main analyzer for codebase analysis."""
-    
-    def analyze_repository(self, path: str, **options) -> AnalysisResult:
-        """Analyze a repository and return structured results."""
-        
-    def analyze_files(self, files: List[str], **options) -> AnalysisResult:
-        """Analyze specific files."""
-        
-    def get_metrics(self, analysis: AnalysisResult) -> Dict:
-        """Extract metrics from analysis results."""
-```
-
-#### DocumentationGenerator
-
-```python
-class DocumentationGenerator:
-    """Generate documentation from analysis results."""
-    
-    def generate(self, analysis: AnalysisResult, **options) -> Documentation:
-        """Generate documentation in specified format."""
-        
-    def generate_interactive(self, analysis: AnalysisResult) -> str:
-        """Generate interactive HTML documentation."""
-        
-    def generate_api_docs(self, analysis: AnalysisResult) -> str:
-        """Generate API documentation."""
-```
-
-#### FormatExporter
-
-```python
-class FormatExporter:
-    """Export documentation to various formats."""
-    
-    def export_html(self, content: str, output_path: str) -> bool:
-        """Export to HTML format."""
-        
-    def export_pdf(self, content: str, output_path: str) -> bool:
-        """Export to PDF format."""
-        
-    def export_multiple(self, content: str, formats: List[str], output_dir: str) -> Dict:
-        """Export to multiple formats simultaneously."""
-```
-
-### REST API Endpoints
-
-#### Analysis Endpoints
-
-```http
-POST /analyze
-Content-Type: application/json
-
 {
-    "path": "/path/to/project",
-    "source_type": "local",
-    "include_ast_analysis": true,
-    "include_security_analysis": true,
-    "include_diagrams": true,
-    "formats": ["html", "pdf"],
-    "theme": "modern"
+    "success": bool,
+    "analysis_id": str,
+    "comprehensive_analysis": {
+        "project_structure": {...},
+        "dependencies": [...],
+        "api_endpoints": [...],
+        "mermaid_diagrams": {...},
+        "security_analysis": {...}
+    },
+    "metrics": {...}
 }
 ```
 
-```http
-GET /status/{analysis_id}
-Response: {
-    "status": "completed",
-    "progress": 100,
-    "results_available": true,
-    "error": null
-}
-```
+#### `generate_documentation`
 
-```http
-GET /download/{analysis_id}
-Response: Binary content or redirect to download URL
-```
+Generate professional documentation with all features built-in.
 
-#### Repository Analysis
+**Parameters:**
+- `analysis_id` (str): ID from previous analysis
+- `format` (str): "markdown", "html", "pdf", "interactive", etc.
+- `theme` (str): "modern", "minimal", "dark", "corporate", etc.
+- `include_toc` (bool): Table of contents
+- `include_search` (bool): Search functionality
+- `include_navigation` (bool): Navigation sidebar
+- `auto_export_formats` (list): Additional export formats
 
-```http
-POST /analyze-repo
-Content-Type: application/json
-
+**Returns:**
+```python
 {
-    "repo_url": "https://github.com/user/repo",
-    "branch": "main",
-    "include_ast_analysis": true,
-    "formats": ["html", "markdown"]
+    "success": bool,
+    "generated_files": [...],
+    "documentation_stats": {...}
 }
 ```
 
-## Project Structure
+#### `export_documentation`
+
+Export to multiple formats with advanced features.
+
+**Parameters:**
+- `analysis_id` (str): ID from previous analysis
+- `formats` (list): Export formats
+- `theme` (str): Documentation theme
+- `accessibility_compliance` (bool): WCAG 2.1 AA compliance
+- `archive_formats` (list): Archive types ["zip", "tar", "tar.gz"]
+
+---
+
+## 📁 Project Structure
 
 ```
 Document-Automation/
-│
-├── src/                          # Source code
-│   ├── __init__.py
-│   ├── server.py                 # FastAPI server
-│   ├── schemas.py                # Pydantic models
-│   │
-│   ├── analyzers/                # Analysis components
-│   │   ├── __init__.py
-│   │   ├── base_analyzer.py      # Base analysis class
-│   │   ├── codebase_analyzer.py  # Main codebase analyzer
-│   │   ├── database_analyzer.py  # Database schema analysis
-│   │   └── framework_detector.py # Framework detection
-│   │
-│   ├── parsers/                  # Code parsers
-│   │   ├── __init__.py
-│   │   ├── base_parser.py        # Base parser class
-│   │   ├── ast_analyzer.py       # AST analysis
-│   │   ├── python_parser.py      # Python-specific parsing
-│   │   ├── javascript_parser.py  # JavaScript parsing
-│   │   └── parser_factory.py     # Parser factory
-│   │
-│   ├── generators/               # Documentation generators
-│   │   ├── __init__.py
+├── src/
+│   ├── analyzers/           # Codebase analysis modules
+│   │   ├── base_analyzer.py
+│   │   ├── codebase_analyzer.py
+│   │   ├── database_analyzer.py
+│   │   ├── framework_detector.py
+│   │   └── project_classifier.py
+│   ├── diagrams/            # Diagram generation
+│   │   ├── architecture_diagrams.py
+│   │   ├── database_diagrams.py
+│   │   └── mermaid_generator.py
+│   ├── export/              # Format exporters
+│   │   └── format_exporter.py
+│   ├── generators/          # Documentation generators
 │   │   ├── documentation_generator.py
 │   │   ├── interactive_doc_generator.py
-│   │   └── professional_doc_generator.py
-│   │
-│   ├── export/                   # Export functionality
-│   │   └── format_exporter.py
-│   │
-│   ├── diagrams/                 # Diagram generation
-│   │   ├── __init__.py
-│   │   ├── mermaid_generator.py
-│   │   ├── architecture_diagrams.py
-│   │   └── database_diagrams.py
-│   │
-│   ├── processing/               # Processing utilities
-│   │   ├── __init__.py
-│   │   ├── concurrent_analyzer.py
-│   │   └── background_processor.py
-│   │
-│   ├── pagination/               # Pagination handling
-│   │   ├── __init__.py
+│   │   ├── professional_doc_generator.py
+│   │   └── readme_template.py
+│   ├── pagination/          # Pagination and chunking
 │   │   ├── chunker.py
-│   │   ├── strategies.py
 │   │   ├── context.py
+│   │   ├── strategies.py
 │   │   └── token_estimator.py
-│   │
-│   ├── security/                 # Security validation
-│   │   ├── __init__.py
+│   ├── parsers/             # Language parsers
+│   │   ├── ast_analyzer.py
+│   │   ├── javascript_parser.py
+│   │   ├── python_parser.py
+│   │   └── mcp_analyzer.py
+│   ├── processing/          # Background processing
+│   │   ├── background_processor.py
+│   │   └── concurrent_analyzer.py
+│   ├── security/            # Security features
+│   │   ├── content_filter.py
 │   │   └── validation.py
-│   │
-│   └── tools/                    # Consolidated tools
-│       ├── __init__.py
-│       └── consolidated_documentation_tools.py
-│
-├── docs/                         # Generated documentation
-├── tests/                        # Test files
-├── templates/                    # Documentation templates
-├── static/                       # Static assets
-├── requirements.txt              # Dependencies
-├── pyproject.toml               # Project configuration
-├── package.json                 # Node.js dependencies (if any)
-├── tsconfig.json                # TypeScript configuration
-├── wrangler.toml                # Cloudflare Workers config
-├── run_server.py                # Server runner
-└── README.md                    # Project README
+│   ├── tools/               # MCP tools
+│   │   └── consolidated_documentation_tools.py
+│   ├── schemas.py           # Data schemas
+│   └── server.py            # MCP server
+├── run_server.py            # Server entry point
+├── requirements.txt         # Python dependencies
+├── pyproject.toml          # Project metadata
+└── README.md               # This file
 ```
 
-## How It Works
+---
 
-### Analysis Process
+## 🏗️ Architecture
 
-1. **Repository Scanning**: Recursively scans the target directory
-2. **File Type Detection**: Identifies file types and programming languages
-3. **AST Parsing**: Parses source code into Abstract Syntax Trees
-4. **Framework Detection**: Identifies frameworks and libraries used
-5. **Dependency Analysis**: Maps dependencies and their relationships
-6. **Security Scanning**: Identifies potential security issues
-7. **Metric Calculation**: Computes code metrics and complexity scores
+### System Overview
 
-### Documentation Generation
-
-1. **Template Selection**: Chooses appropriate template based on theme
-2. **Content Assembly**: Assembles analyzed data into documentation structure
-3. **Diagram Generation**: Creates Mermaid diagrams for visualization
-4. **Format Rendering**: Renders content in requested formats
-5. **Export Processing**: Optimizes and exports final documentation
-
-### Supported Analysis Types
-
-- **Static Code Analysis**: Function/class/variable analysis
-- **Dependency Mapping**: Import/export relationships
-- **Architecture Analysis**: High-level system architecture
-- **Database Schema**: Table relationships and structures
-- **API Discovery**: REST endpoint identification
-- **Security Scanning**: Common vulnerability detection
-
-## Deployment
-
-### Docker Deployment
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 8000
-
-CMD ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
+```mermaid
+flowchart TB
+    Client[Claude/MCP Client] --> Server[MCP Server]
+    Server --> Analyzer[Codebase Analyzer]
+    Server --> Generator[Doc Generator]
+    Server --> Exporter[Format Exporter]
+    
+    Analyzer --> AST[AST Parser]
+    Analyzer --> Framework[Framework Detector]
+    Analyzer --> Database[DB Analyzer]
+    Analyzer --> Security[Security Scanner]
+    
+    Generator --> Interactive[Interactive HTML]
+    Generator --> Professional[Professional Docs]
+    Generator --> Diagrams[Mermaid Diagrams]
+    
+    Exporter --> PDF[PDF Export]
+    Exporter --> HTML[HTML Export]
+    Exporter --> Markdown[Markdown Export]
+    Exporter --> DOCX[DOCX Export]
 ```
+
+### Component Interaction
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Analyzer
+    participant Generator
+    participant Exporter
+    
+    Client->>Server: analyze_codebase()
+    Server->>Analyzer: Parse & Analyze
+    Analyzer->>Analyzer: AST, Framework, DB, Security
+    Analyzer-->>Server: Analysis Results
+    Server-->>Client: analysis_id
+    
+    Client->>Server: generate_documentation()
+    Server->>Generator: Create Docs
+    Generator->>Generator: Format, Theme, Diagrams
+    Generator-->>Server: Documentation
+    Server-->>Client: Generated Files
+    
+    Client->>Server: export_documentation()
+    Server->>Exporter: Convert Formats
+    Exporter->>Exporter: PDF, HTML, DOCX
+    Exporter-->>Server: Exported Files
+    Server-->>Client: Export Results
+```
+
+---
+
+## 🛠️ Development
+
+### Setup Development Environment
 
 ```bash
-# Build and run
-docker build -t document-automation .
-docker run -p 8000:8000 document-automation
-```
-
-### Cloud Deployment
-
-#### AWS EC2
-
-```bash
-# Install on EC2 instance
-sudo yum update -y
-sudo yum install python3 python3-pip git -y
-
-# Clone and setup
-git clone https://github.com/vedantparmar12/Document-Automation.git
-cd Document-Automation
-pip3 install -r requirements.txt
-
-# Run with systemd
-sudo nano /etc/systemd/system/document-automation.service
-sudo systemctl enable document-automation
-sudo systemctl start document-automation
-```
-
-#### Heroku
-
-```bash
-# Heroku deployment
-heroku create your-app-name
-heroku buildpacks:set heroku/python
-git push heroku main
-```
-
-#### Cloudflare Workers
-
-The project includes `wrangler.toml` for Cloudflare Workers deployment:
-
-```bash
-npm install -g @cloudflare/wrangler
-wrangler publish
-```
-
-## Contributing
-
-We welcome contributions! Here's how to get started:
-
-### Development Setup
-
-```bash
-# Fork and clone the repository
-git clone https://github.com/your-username/Document-Automation.git
-cd Document-Automation
-
-# Create feature branch
-git checkout -b feature/your-feature-name
-
-# Setup development environment
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements-dev.txt
 
-# Install pre-commit hooks
-pre-commit install
+# Install dev dependencies
+pip install -r requirements.txt
+pip install black pytest pytest-cov mypy
+
+# Run tests
+pytest tests/
+
+# Format code
+black src/
+
+# Type checking
+mypy src/
 ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-python -m pytest
+pytest
 
 # Run with coverage
-python -m pytest --cov=src
+pytest --cov=src --cov-report=html
 
 # Run specific test file
-python -m pytest tests/test_analyzer.py
-
-# Run with verbose output
-python -m pytest -v
+pytest tests/test_analyzer.py
 ```
 
-### Code Style
-
-We use:
-- **Black** for code formatting
-- **isort** for import sorting  
-- **flake8** for linting
-- **mypy** for type checking
+### Code Quality
 
 ```bash
-# Format code
+# Format with Black
 black src/ tests/
-isort src/ tests/
 
-# Check linting
+# Lint with Flake8
 flake8 src/ tests/
 
-# Type checking
+# Type check with MyPy
 mypy src/
 ```
 
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit your changes**: `git commit -m 'Add amazing feature'`
+4. **Push to the branch**: `git push origin feature/amazing-feature`
+5. **Open a Pull Request**
+
 ### Contribution Guidelines
 
-1. **Fork the repository** and create a feature branch
-2. **Write tests** for new functionality
-3. **Follow code style** guidelines
-4. **Update documentation** as needed
-5. **Submit a pull request** with clear description
+- Follow PEP 8 style guide
+- Add tests for new features
+- Update documentation
+- Ensure all tests pass
+- Keep commits atomic and well-described
 
-### Reporting Issues
+---
 
-When reporting issues, please include:
-- Python version and OS
-- Error messages and stack traces
-- Minimal reproducible example
-- Expected vs actual behavior
+## 📊 Performance
 
-## Troubleshooting
+### Benchmarks
+
+| Operation | Small Repo (<100 files) | Medium Repo (100-1000 files) | Large Repo (>1000 files) |
+|-----------|------------------------|------------------------------|--------------------------|
+| Analysis | ~5 seconds | ~30 seconds | ~2-5 minutes |
+| Doc Generation | ~2 seconds | ~10 seconds | ~30 seconds |
+| Export (all formats) | ~3 seconds | ~15 seconds | ~45 seconds |
+
+### Optimization Tips
+
+- Use `pagination_strategy="smart"` for large repositories
+- Enable `include_security_analysis=False` if not needed
+- Limit `max_files` for faster analysis
+- Use concurrent processing for multiple projects
+
+---
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-#### Analysis Fails with Large Repositories
-
+**Issue**: `ModuleNotFoundError: No module named 'src'`
 ```bash
-# Increase memory limits
-export PYTHONHASHSEED=0
-export PYTHONMAXMEMORY=8GB
-
-# Use pagination
-python -m document_automation analyze /path/to/project --max-files 500
+# Solution: Add project root to PYTHONPATH
+export PYTHONPATH="${PYTHONPATH}:/path/to/Document-Automation"
 ```
 
-#### PDF Export Issues
-
+**Issue**: GitHub rate limiting
 ```bash
-# Install additional dependencies
-# On Ubuntu/Debian:
-sudo apt-get install wkhtmltopdf
-
-# On macOS:
-brew install wkhtmltopdf
-
-# On Windows: Download from https://wkhtmltopdf.org/
+# Solution: Set GitHub token
+export GITHUB_TOKEN="your_token_here"
 ```
 
-#### Permission Errors
-
+**Issue**: Memory errors with large repositories
 ```bash
-# Ensure proper permissions
-chmod +x run_server.py
-
-# Run with proper user permissions
-sudo chown -R $(whoami):$(whoami) ./docs/
-```
-
-### Performance Optimization
-
-#### For Large Codebases
-
-```python
-# Optimize analysis settings
-analyzer = CodebaseAnalyzer(
-    max_concurrent_files=10,
-    enable_caching=True,
-    skip_binary_files=True,
-    max_file_size="10MB"
-)
-```
-
-#### Memory Usage
-
-```python
-# Reduce memory footprint
-import gc
-
-# Enable garbage collection
-gc.enable()
-
-# Use streaming for large files
-analyzer.enable_streaming = True
-analyzer.chunk_size = 1024
-```
-
-### Debug Mode
-
-```bash
-# Enable debug logging
-export DEBUG=True
-export LOG_LEVEL=DEBUG
-
-# Run with verbose output
-python -m document_automation analyze /path/to/project --verbose --debug
-```
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2024 Vedant Parmar
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+# Solution: Use pagination
+analyze_codebase(path="...", max_files=500, pagination_strategy="smart")
 ```
 
 ---
 
-## Quick Start Summary
+## 📄 License
 
-1. **Clone the repository**: `git clone https://github.com/vedantparmar12/Document-Automation.git`
-2. **Install dependencies**: `pip install -r requirements.txt`
-3. **Start the server**: `python run_server.py`
-4. **Access the API**: Navigate to `http://localhost:8000`
-5. **Analyze your project**: Use the web interface or REST API
-6. **Download documentation**: Get your generated docs in multiple formats
-
-For more detailed information, please refer to the specific sections above or check the project's GitHub repository.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-*Generated by Document Automation v1.0.0 - Automated documentation generation tool*
+## 🙏 Acknowledgments
+
+- Built with the [Model Context Protocol](https://modelcontextprotocol.io)
+- Powered by [Claude](https://claude.ai)
+- Diagram generation using [Mermaid](https://mermaid.js.org)
+
+---
+
+## 📮 Contact
+
+**Vedant Parmar** - [@vedantparmar12](https://github.com/vedantparmar12)
+
+**Project Link**: [https://github.com/vedantparmar12/Document-Automation](https://github.com/vedantparmar12/Document-Automation)
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Support for more programming languages (Go, Rust, Java)
+- [ ] Real-time collaboration features
+- [ ] Cloud storage integration (S3, GCS)
+- [ ] API documentation auto-generation from OpenAPI specs
+- [ ] Enhanced security scanning with CVE database
+- [ ] Performance profiling and optimization suggestions
+- [ ] Custom template support
+- [ ] CLI tool for standalone use
+
+---
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star! ⭐
+
+---
+
+**Made with ❤️ by Vedant Parmar**
