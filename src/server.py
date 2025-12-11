@@ -1,12 +1,29 @@
 #!/usr/bin/env python3
+import sys
+import os
+from pathlib import Path
+
+# CRITICAL FIX FOR WINDOWS: Set binary mode on stdin/stdout IMMEDIATELY
+# This prevents Windows from converting LF to CRLF which breaks MCP protocol
+if sys.platform == "win32":
+    import msvcrt
+    msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+
+# Redirect all stdout to stderr by default to prevent any
+# third-party libraries from polluting the stdout stream used for JSON-RPC.
+original_stdout = sys.stdout
+sys.stdout = sys.stderr
+
 import asyncio
 import argparse
 import logging
 from typing import Any, Dict, List, Optional
 from contextlib import asynccontextmanager
-import os
-import sys
-from pathlib import Path
+import warnings
+
+# Suppress all warnings to prevent them from corrupting the stream
+warnings.simplefilter("ignore")
 
 # Add the parent directory to Python path so imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -23,15 +40,10 @@ from mcp.server.lowlevel.server import NotificationOptions
 from mcp.types import TextContent, Tool, JSONRPCError, INTERNAL_ERROR
 from pydantic import BaseModel, Field
 
-# Add debug print
-print(f"[DEBUG] Starting server from: {__file__}", file=sys.stderr)
-print(f"[DEBUG] Python path: {sys.path}", file=sys.stderr)
-
 from src.tools.consolidated_documentation_tools import ConsolidatedDocumentationTools
 from src.analyzers.codebase_analyzer import CodebaseAnalyzer
 from src.generators.documentation_generator import DocumentationGenerator
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class DocumentAutomationServer:
@@ -405,21 +417,7 @@ class DocumentAutomationServer:
             """Handle resources list request"""
             return []
 
-    async def run(self):
-        logger.info("[DEBUG] Starting server run")
-        async with stdio_server() as (read_stream, write_stream):
-            await self.server.run(
-                read_stream,
-                write_stream,
-                InitializationOptions(
-                    server_name="document-automation-server",
-                    server_version="1.0.0",
-                    capabilities=self.server.get_capabilities(
-                        notification_options=NotificationOptions(),
-                        experimental_capabilities={}
-                    )
-                )
-            )
+
 
 def main():
     print("[INFO] MCP Document Automation Server starting...", file=sys.stderr)
@@ -427,12 +425,53 @@ def main():
     parser.add_argument("--log-level", default="INFO", help="Set the logging level")
     args = parser.parse_args()
 
-    logging.basicConfig(level=getattr(logging, args.log_level.upper()))
+    # Configure logging to write to stderr to facilitate JSON-RPC on stdout
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper()),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        stream=sys.stderr
+    )
+
+    async def run_server_async(server_instance):
+        # Restore sys.stdout just before stdio_server uses it.
+        # This is safe because we're inside the async context now, all imports are done.
+        global original_stdout
+        sys.stdout = original_stdout
+        
+        # CRITICAL: Disable ALL logging handlers to prevent any interference
+        # with the MCP protocol stream on stdout
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+        logging.disable(logging.CRITICAL)  # Disable all logging
+        
+        async with stdio_server() as (read_stream, write_stream):
+            await server_instance.server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="document-automation-server",
+                    server_version="1.0.0",
+                    capabilities=server_instance.server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={}
+                    )
+                )
+            )
 
     try:
         server = DocumentAutomationServer()
+        # logging.info is already going to stderr
         print("[INFO] Server initialized, starting MCP communication...", file=sys.stderr)
-        asyncio.run(server.run())
+        
+        # On Windows, ensure we are in a mode that doesn't mangle newlines if possible,
+        # though stdio_server handles this mostly.
+        if sys.platform == "win32":
+            import msvcrt
+            msvcrt.setmode(original_stdout.fileno(), os.O_BINARY)
+            msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+
+        asyncio.run(run_server_async(server))
+
     except Exception as e:
         print(f"[ERROR] Server failed to start: {e}", file=sys.stderr)
         import traceback

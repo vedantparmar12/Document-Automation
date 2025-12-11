@@ -13,6 +13,10 @@ from pathlib import Path
 
 from src.schemas import DocumentationResult, DocumentationFormat, CodeAnalysisResult
 
+from src.schemas import DocumentationResult, DocumentationFormat, CodeAnalysisResult
+from src.diagrams.architecture_diagrams import ArchitectureDiagramGenerator, ArchitecturePattern
+from src.diagrams.mermaid_generator import MermaidGenerator
+
 logger = logging.getLogger(__name__)
 
 class DocumentationGenerator:
@@ -34,6 +38,8 @@ class DocumentationGenerator:
         self.include_toc = self.config.get('include_toc', True)
         self.include_code_examples = self.config.get('include_code_examples', True)
         self.include_diagrams = self.config.get('include_diagrams', True)
+        self.arch_generator = ArchitectureDiagramGenerator()
+        self.mermaid_generator = MermaidGenerator()
     
     async def generate_documentation(
         self,
@@ -110,76 +116,114 @@ class DocumentationGenerator:
         """Generate Markdown documentation."""
         content = []
         
-        # Title and introduction
-        content.append("# Project Documentation")
+        # 1. Title and Header
+        project_name = getattr(analysis_result, 'project_name', 'Unnamed Project')
+        # If project_name is missing or default, try to infer from project structure root
+        if project_name == 'Unnamed Project' and analysis_result.project_structure:
+            project_name = analysis_result.project_structure.name.replace('_', ' ').title()
+
+        content.append(f"# {project_name}")
         content.append("")
-        content.append("This documentation was automatically generated from codebase analysis.")
-        content.append("")
-        content.append(f"**Generated at:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        content.append("")
-        
-        # Table of Contents
-        if self.include_toc:
-            content.append("## Table of Contents")
-            content.append("")
-            content.append("- [Project Structure](#project-structure)")
-            if analysis_result.dependencies:
-                content.append("- [Dependencies](#dependencies)")
-            if include_api_docs and analysis_result.api_endpoints:
-                content.append("- [API Endpoints](#api-endpoints)")
-            if include_architecture and analysis_result.architecture_info:
-                content.append("- [Architecture](#architecture)")
-            if analysis_result.metrics:
-                content.append("- [Metrics](#metrics)")
-            content.append("")
-        
-        # Project Structure
-        content.append("## Project Structure")
-        content.append("")
-        content.append(self._format_directory_structure_markdown(analysis_result.project_structure))
+        content.append(f"**Documentation Generated:** {datetime.now().strftime('%Y-%m-%d')}")
         content.append("")
         
-        # Dependencies
-        if analysis_result.dependencies:
-            content.append("## Dependencies")
-            content.append("")
-            for dep in analysis_result.dependencies:
-                content.append(f"- {dep}")
-            content.append("")
+        # 2. Executive Summary / Overview
+        content.append("## Overview")
+        content.append("")
+        content.append("Welcome to the developer documentation! This guide is designed to help new developers understand the codebase, set up their environment, and start contributing.")
+        content.append("")
         
-        # API Endpoints
-        if include_api_docs and analysis_result.api_endpoints:
-            content.append("## API Endpoints")
-            content.append("")
-            for endpoint in analysis_result.api_endpoints:
-                content.append(f"### {endpoint.get('method', 'GET')} {endpoint.get('path', '')}")
+        # Add tech stack summary if available
+        if include_architecture and analysis_result.architecture_info:
+            tech_stack = analysis_result.architecture_info.get('tech_stack', [])
+            if tech_stack:
+                content.append("### Key Technologies")
                 content.append("")
-                if endpoint.get('description'):
-                    content.append(f"**Description:** {endpoint['description']}")
-                    content.append("")
-                if endpoint.get('parameters'):
-                    content.append("**Parameters:**")
-                    for param in endpoint['parameters']:
-                        content.append(f"- `{param.get('name', '')}` ({param.get('type', '')}) - {param.get('description', '')}")
-                    content.append("")
+                content.append(f"The project is built using: **{', '.join(tech_stack)}**.")
                 content.append("")
+
+        # 3. Quick Start (Placeholder - encouraged to fill)
+        content.append("## Getting Started")
+        content.append("")
+        content.append("> **Note to New Developers:** This section should be updated with specific setup instructions (e.g., `npm install`, `pip install -r requirements.txt`).")
+        content.append("")
+        content.append("### Prerequisites")
+        content.append("- [ ] Check `README.md` for specific version requirements.")
+        content.append("")
+        content.append("### Installation")
+        content.append("```bash")
+        content.append("# Example installation steps")
+        content.append("git clone <repository-url>")
+        content.append("cd <project-folder>")
+        content.append("# Install dependencies here")
+        content.append("```")
+        content.append("")
+
+        # 4. High-Level Project Structure (Summarized)
+        content.append("## Key Components")
+        content.append("")
+        content.append("The codebase is organized as follows:")
+        content.append("")
+        # Use summarized structure instead of full tree
+        content.append(self._format_directory_structure_summary(analysis_result.project_structure))
+        content.append("")
         
-        # Architecture
+        # 5. Architecture & Patterns
         if include_architecture and analysis_result.architecture_info:
             content.append("## Architecture")
             content.append("")
             content.append(self._format_architecture_markdown(analysis_result.architecture_info))
             content.append("")
-        
-        # Metrics
-        if analysis_result.metrics:
-            content.append("## Metrics")
+
+        # 6. Core Dependencies
+        if analysis_result.dependencies:
+            content.append("## Core Dependencies")
             content.append("")
-            for key, value in analysis_result.metrics.items():
-                content.append(f"- **{key}:** {value}")
+            # Limit to top 15 dependencies to avoid clutter
+            deps = analysis_result.dependencies[:15]
+            for dep in deps:
+                content.append(f"- {dep}")
+            if len(analysis_result.dependencies) > 15:
+                content.append(f"- ...and {len(analysis_result.dependencies) - 15} more.")
             content.append("")
         
+        # 7. API Reference (Collapsed/Linkable if large)
+        if include_api_docs and analysis_result.api_endpoints:
+            content.append("## API Reference")
+            content.append("")
+            # Just list endpoints concisely
+            for endpoint in analysis_result.api_endpoints:
+                method = endpoint.get('method', 'GET')
+                path = endpoint.get('path', '')
+                desc = endpoint.get('description', 'No description')
+                content.append(f"- **{method}** `{path}`: {desc}")
+            content.append("")
+
         return "\n".join(content)
+
+    def _format_directory_structure_summary(self, directory_info) -> str:
+        """Format directory structure summary, showing only top-level folders and key files."""
+        def format_summary(dir_info, level=0):
+            if level > 1: # Only go 2 levels deep for summary
+                return []
+            
+            indent = "  " * level
+            result = [f"{indent}- **{dir_info.name}/**"]
+            
+            # Show key files (README, config, etc.) or all files if count is low
+            key_files = ['README.md', 'package.json', 'requirements.txt', 'Dockerfile', 'docker-compose.yml', 'tsconfig.json', 'pyproject.toml']
+            for file_info in dir_info.files:
+                if file_info.name in key_files or level == 0:
+                     file_indent = "  " * (level + 1)
+                     result.append(f"{file_indent}- {file_info.name}")
+            
+            # Recurse for subdirectories
+            for subdir in dir_info.subdirectories:
+                result.extend(format_summary(subdir, level + 1))
+            
+            return result
+        
+        return "\n".join(format_summary(directory_info))
     
     async def _generate_html(
         self,
@@ -282,12 +326,209 @@ class DocumentationGenerator:
         include_examples: bool,
         include_architecture: bool
     ) -> str:
-        """Generate PDF documentation."""
-        # For now, return HTML content that can be converted to PDF
-        # In a full implementation, you would use libraries like ReportLab or WeasyPrint
-        return await self._generate_html(
-            analysis_result, include_api_docs, include_examples, include_architecture
-        )
+        """
+        Generate 'Manager View' PDF-optimized HTML.
+        
+        This generates a clean, diagram-focused view specifically designed for
+        printing to PDF for non-technical stakeholders.
+        """
+        project_name = getattr(analysis_result, 'project_name', 'System Architecture')
+        if project_name == 'Unnamed Project' and analysis_result.project_structure:
+            project_name = analysis_result.project_structure.name.replace('_', ' ').title()
+
+        # Generate the core architecture diagram
+        # Convert CodeAnalysisResult to dict for compatibility with generator
+        analysis_dict = {
+            'frameworks': analysis_result.project_structure.dict().get('frameworks', []) if hasattr(analysis_result.project_structure, 'dict') else [],
+            'file_structure': str(analysis_result.project_structure),
+            'services': [], # TODO: Extract actual services if microservices
+            'classification': getattr(analysis_result, 'classification', {})
+        }
+        
+        mermaid_diagram = self.arch_generator.generate_system_architecture(analysis_dict)
+        
+        # Detect Tech Stack for Badges
+        tech_stack = []
+        if analysis_result.architecture_info:
+             tech_stack = analysis_result.architecture_info.get('tech_stack', [])
+
+        html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{project_name} - Executive Summary</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({{startOnLoad:true, theme: 'neutral'}});</script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #fff;
+        }}
+        
+        /* Print Optimization */
+        @media print {{
+            body {{ padding: 0; }}
+            .no-print {{ display: none; }}
+            .page-break {{ page-break-before: always; }}
+        }}
+        
+        header {{
+            text-align: center;
+            margin-bottom: 60px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }}
+        
+        h1 {{
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }}
+        
+        .subtitle {{
+            color: #666;
+            font-size: 1.2em;
+        }}
+        
+        .section {{
+            margin-bottom: 50px;
+        }}
+        
+        .diagram-container {{
+            background: #fcfcfc;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }}
+        
+        .tech-badges {{
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }}
+        
+        .badge {{
+            padding: 6px 16px;
+            background: #f0f2f5;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #444;
+            border: 1px solid #e0e0e0;
+        }}
+        
+        .explanation-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }}
+        
+        .explanation-card {{
+            padding: 20px;
+            background: #fff;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }}
+        
+        .explanation-card h3 {{
+            margin-top: 0;
+            color: #1a1a1a;
+        }}
+        
+        .explanation-card p {{
+            color: #555;
+            font-size: 0.95em;
+            margin-bottom: 0;
+        }}
+
+        .print-btn {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }}
+        .print-btn:hover {{ background: #2563eb; }}
+    </style>
+</head>
+<body>
+    <a href="javascript:window.print()" class="print-btn no-print">🖨️ Save as PDF</a>
+
+    <header>
+        <h1>{project_name}</h1>
+        <div class="subtitle">System Architecture & Workflow Overview</div>
+        <div class="tech-badges">
+            {''.join([f'<span class="badge">{t}</span>' for t in tech_stack])}
+        </div>
+    </header>
+
+    <div class="section">
+        <h2>System Architecture</h2>
+        <p>The following diagram illustrates the high-level components of the system and how they interact to deliver functionality.</p>
+        
+        <div class="diagram-container">
+            <div class="mermaid">
+{mermaid_diagram}
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>How It Works (Workflow)</h2>
+        <div class="explanation-grid">
+            <div class="explanation-card">
+                <h3>1. User Interaction</h3>
+                <p>Users interact with the <strong>Presentation Layer</strong> (User Interface). This is the visual part of the application that runs in the browser or mobile device, handling all user inputs and displaying information.</p>
+            </div>
+            <div class="explanation-card">
+                <h3>2. Request Processing</h3>
+                <p>Requests are sent to the <strong>API/Controller Layer</strong>. This acts as the "traffic cop," receiving instructions from the user, validating them, and deciding which business rules to apply.</p>
+            </div>
+            <div class="explanation-card">
+                <h3>3. Business Logic</h3>
+                <p>The core intelligence resides in the <strong>Business Layer</strong> ('Services'). This is where the actual work happens—calculations, rules, and decision-making logic are executed here.</p>
+            </div>
+            <div class="explanation-card">
+                <h3>4. Data Management</h3>
+                <p>The <strong>Data Access Layer</strong> communicates with the <strong>Database</strong> to save or retrieve information carefully, ensuring data integrity and security.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section page-break">
+        <h2>Key Technologies</h2>
+        <p>The system is built using the following core technologies, chosen for performance and scalability:</p>
+        <ul>
+            {''.join([f'<li><strong>{t}</strong></li>' for t in tech_stack])}
+        </ul>
+    </div>
+
+    <footer style="text-align: center; margin-top: 50px; color: #888; font-size: 0.8em;">
+        Generated on {datetime.now().strftime('%Y-%m-%d')} for {project_name}
+    </footer>
+</body>
+</html>
+        """
+        return html_content
     
     def _format_directory_structure_markdown(self, directory_info) -> str:
         """Format directory structure for Markdown."""

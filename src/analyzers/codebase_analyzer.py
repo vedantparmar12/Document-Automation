@@ -162,6 +162,117 @@ class CodebaseAnalyzer(BaseAnalyzer):
                 logger.warning(f"Error reading package.json: {e}")
         
         logger.info(f"Found {len(dependencies)} dependencies")
+        
+        # Go dependencies (go.mod)
+        go_mod = os.path.join(self.working_path, 'go.mod')
+        if os.path.exists(go_mod):
+            try:
+                with open(go_mod, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith('require'):
+                            if ' ' in line:  # Single line require
+                                parts = line.split()
+                                if len(parts) >= 2:
+                                    dependencies.append({
+                                        'name': parts[1],
+                                        'version': parts[2] if len(parts) > 2 else 'latest',
+                                        'source': 'go.mod',
+                                        'type': 'go'
+                                    })
+                        elif '(' not in line and ')' not in line and len(line.split()) >= 2: # Inside require block
+                             parts = line.split()
+                             # Simple heuristic to avoid directives
+                             if '.' in parts[0]: 
+                                dependencies.append({
+                                    'name': parts[0],
+                                    'version': parts[1] if len(parts) > 1 else 'latest',
+                                    'source': 'go.mod',
+                                    'type': 'go'
+                                })
+            except Exception as e:
+                logger.warning(f"Error reading go.mod: {e}")
+
+        # Rust dependencies (Cargo.toml)
+        cargo_toml = os.path.join(self.working_path, 'Cargo.toml')
+        if os.path.exists(cargo_toml):
+            try:
+                import tomllib # Python 3.11+
+                with open(cargo_toml, 'rb') as f:
+                    data = tomllib.load(f)
+                    for dep_name, dep_info in data.get('dependencies', {}).items():
+                        version = dep_info if isinstance(dep_info, str) else dep_info.get('version', 'unknown')
+                        dependencies.append({
+                            'name': dep_name,
+                            'version': version,
+                            'source': 'Cargo.toml',
+                            'type': 'rust'
+                        })
+            except ImportError:
+                 # Fallback for older python or missing library - simple parsing
+                 try:
+                    with open(cargo_toml, 'r', encoding='utf-8', errors='ignore') as f:
+                        in_deps = False
+                        for line in f:
+                            line = line.strip()
+                            if line == '[dependencies]':
+                                in_deps = True
+                                continue
+                            if line.startswith('['):
+                                in_deps = False
+                            
+                            if in_deps and '=' in line:
+                                name = line.split('=')[0].strip()
+                                version = line.split('=')[1].strip().strip('"').strip("'")
+                                dependencies.append({
+                                    'name': name,
+                                    'version': version,
+                                    'source': 'Cargo.toml',
+                                    'type': 'rust'
+                                })
+                 except Exception as e:
+                    logger.warning(f"Error reading Cargo.toml: {e}")
+            except Exception as e:
+                logger.warning(f"Error reading Cargo.toml: {e}")
+
+        # Java dependencies (pom.xml - Maven)
+        pom_xml = os.path.join(self.working_path, 'pom.xml')
+        if os.path.exists(pom_xml):
+            try:
+                with open(pom_xml, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    # Simple regex for dependencies - XML parsing is heavy
+                    matches = re.findall(r'<dependency>[\s\S]*?<groupId>(.*?)</groupId>[\s\S]*?<artifactId>(.*?)</artifactId>[\s\S]*?(?:<version>(.*?)</version>)?', content)
+                    for group_id, artifact_id, version in matches:
+                         dependencies.append({
+                            'name': f"{group_id}:{artifact_id}",
+                            'version': version if version else 'latest',
+                            'source': 'pom.xml',
+                            'type': 'java'
+                         })
+            except Exception as e:
+                logger.warning(f"Error reading pom.xml: {e}")
+
+        # Java dependencies (build.gradle - Gradle)
+        build_gradle = os.path.join(self.working_path, 'build.gradle')
+        if os.path.exists(build_gradle):
+            try:
+                with open(build_gradle, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith('implementation') or line.startswith('api') or line.startswith('compile'):
+                             # implementation 'group:name:version'
+                             match = re.search(r"['\"](.+?):(.+?):(.+?)['\"]", line)
+                             if match:
+                                dependencies.append({
+                                    'name': f"{match.group(1)}:{match.group(2)}",
+                                    'version': match.group(3),
+                                    'source': 'build.gradle',
+                                    'type': 'java'
+                                })
+            except Exception as e:
+                logger.warning(f"Error reading build.gradle: {e}")
+
         return dependencies
 
     async def _extract_api_endpoints(self) -> List[Dict[str, Any]]:
@@ -240,6 +351,45 @@ class CodebaseAnalyzer(BaseAnalyzer):
                                         })
                         except Exception as e:
                             logger.debug(f"Error reading {file_path}: {e}")
+
+                    # Extract from Go files (Gin, Echo, Standard Lib)
+                    elif file.endswith('.go'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                # Gin/Echo: r.GET("/path", handler) or e.GET("/path", handler)
+                                go_pattern = r'\.(GET|POST|PUT|DELETE|PATCH|OPTIONS|HEAD)\(["\']([^"\']+)["\']'
+                                for match in re.finditer(go_pattern, content):
+                                    method, path = match.groups()
+                                    endpoints.append({
+                                        'path': path,
+                                        'methods': method,
+                                        'framework': 'Go (Gin/Echo)',
+                                        'file': os.path.relpath(file_path, self.working_path)
+                                    })
+                        except Exception as e:
+                             logger.debug(f"Error reading {file_path}: {e}")
+
+                    # Extract from Java files (Spring Boot)
+                    elif file.endswith('.java'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                # Spring Boot: @GetMapping("/path"), @PostMapping(value = "/path")
+                                spring_pattern = r'@(Get|Post|Put|Delete|Patch|Request)Mapping\(\s*(?:value\s*=\s*)?["\']([^"\']+)["\']'
+                                for match in re.finditer(spring_pattern, content):
+                                    method_type, path = match.groups()
+                                    method = method_type.upper() if method_type != 'Request' else 'ANY'
+                                    endpoints.append({
+                                        'path': path,
+                                        'methods': method,
+                                        'framework': 'Spring Boot',
+                                        'file': os.path.relpath(file_path, self.working_path)
+                                    })
+                        except Exception as e:
+                             logger.debug(f"Error reading {file_path}: {e}")
             
             # Remove duplicates based on path and method
             seen = set()
@@ -521,6 +671,52 @@ class CodebaseAnalyzer(BaseAnalyzer):
                         })
             except Exception as e:
                 logger.warning(f"Error reading package.json: {e}")
+
+        # Check for Go frameworks
+        go_mod = os.path.join(self.working_path, 'go.mod')
+        if os.path.exists(go_mod):
+            try:
+                with open(go_mod, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    if 'github.com/gin-gonic/gin' in content:
+                        frameworks.append({'name': 'Gin', 'category': 'start_framework', 'confidence': 0.95})
+                    if 'github.com/labstack/echo' in content:
+                        frameworks.append({'name': 'Echo', 'category': 'web_framework', 'confidence': 0.95})
+                    if 'github.com/gofiber/fiber' in content:
+                        frameworks.append({'name': 'Fiber', 'category': 'web_framework', 'confidence': 0.95})
+            except: pass
+
+        # Check for Java frameworks (Maven/Gradle)
+        if os.path.exists(os.path.join(self.working_path, 'pom.xml')) or os.path.exists(os.path.join(self.working_path, 'build.gradle')):
+            # Read both if they exist
+            content = ""
+            try:
+                if os.path.exists(os.path.join(self.working_path, 'pom.xml')):
+                     with open(os.path.join(self.working_path, 'pom.xml'), 'r', encoding='utf-8', errors='ignore') as f: content += f.read()
+                if os.path.exists(os.path.join(self.working_path, 'build.gradle')):
+                     with open(os.path.join(self.working_path, 'build.gradle'), 'r', encoding='utf-8', errors='ignore') as f: content += f.read()
+                
+                if 'spring-boot' in content:
+                     frameworks.append({'name': 'Spring Boot', 'category': 'fullstack_framework', 'confidence': 0.99})
+                if 'quarkus' in content:
+                     frameworks.append({'name': 'Quarkus', 'category': 'fullstack_framework', 'confidence': 0.9})
+            except: pass
+
+        # Check for Rust frameworks
+        cargo_toml = os.path.join(self.working_path, 'Cargo.toml')
+        if os.path.exists(cargo_toml):
+            try:
+                 with open(cargo_toml, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    if 'actix-web' in content:
+                        frameworks.append({'name': 'Actix Web', 'category': 'web_framework', 'confidence': 0.95})
+                    if 'axum' in content:
+                        frameworks.append({'name': 'Axum', 'category': 'web_framework', 'confidence': 0.95})
+                    if 'rocket' in content:
+                        frameworks.append({'name': 'Rocket', 'category': 'web_framework', 'confidence': 0.90})
+                    if 'tokio' in content:
+                        frameworks.append({'name': 'Tokio', 'category': 'async_runtime', 'confidence': 0.90})
+            except: pass
         
         return frameworks
     
