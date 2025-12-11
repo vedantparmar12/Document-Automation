@@ -8,9 +8,18 @@ open source projects with rich content, examples, and technical details.
 import os
 import logging
 import re
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Set
 from datetime import datetime
+from pathlib import Path
 import json
+
+# Import content filter for security
+try:
+    from src.security.content_filter import ContentFilter, create_content_filter
+except ImportError:
+    # Fallback if import fails
+    ContentFilter = None
+    create_content_filter = None
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +27,12 @@ class ProfessionalDocumentationGenerator:
     """Generates professional, comprehensive documentation with rich content."""
     
     def __init__(self):
+        # Initialize content filter for security
+        if create_content_filter:
+            self.content_filter = create_content_filter(strict_mode=True)
+        else:
+            self.content_filter = None
+        
         self.project_patterns = {
             'tracker': {
                 'type': 'Monitoring Tool',
@@ -57,6 +72,16 @@ class ProfessionalDocumentationGenerator:
                     'Scheduled operations',
                     'Event-driven actions',
                     'Extensible plugin system'
+                ]
+            },
+            'mcp_server': {
+                'type': 'MCP Server',
+                'description': 'provides AI assistants with structured tools and capabilities via the Model Context Protocol',
+                'features': [
+                    'MCP tool definitions',
+                    'AI assistant integration',
+                    'Structured data exchange',
+                    'Client configuration support'
                 ]
             }
         }
@@ -903,65 +928,136 @@ API requests are limited to:
         return api_ref
     
     def _generate_project_structure(self, analysis_result: Dict[str, Any]) -> str:
-        """Generate detailed project structure."""
+        """Generate detailed project structure from actual analysis data."""
+        
+        # Get actual project structure from analysis
+        project_structure = analysis_result.get('project_structure', {})
+        files_list = project_structure.get('files', [])
+        
+        # Build folder tree from actual files
+        folders: Dict[str, Set[str]] = {}
+        root_files: Set[str] = set()
+        
+        # Common folder descriptions
+        folder_descriptions = {
+            'src': 'Source code and main application modules',
+            'lib': 'Library code and utilities',
+            'tests': 'Test files and test utilities',
+            'test': 'Test files and test utilities',
+            'docs': 'Documentation files',
+            'config': 'Configuration files',
+            'scripts': 'Utility scripts',
+            'utils': 'Utility functions and helpers',
+            'api': 'API routes and handlers',
+            'models': 'Data models and schemas',
+            'views': 'View templates',
+            'controllers': 'Request controllers',
+            'services': 'Business services',
+            'components': 'UI components',
+            'assets': 'Static assets',
+            'public': 'Public files',
+            'static': 'Static files',
+            'templates': 'Template files',
+            'migrations': 'Database migrations',
+            'analyzers': 'Code analysis modules',
+            'generators': 'Documentation generation modules',
+            'security': 'Security and validation modules',
+            'tools': 'Tool implementations',
+            'parsers': 'Code parsing modules',
+            'processing': 'Data processing modules',
+            'diagrams': 'Diagram generation modules',
+            'export': 'Export functionality',
+            'pagination': 'Pagination handling',
+        }
+        
+        # Folders and files to exclude from display
+        excluded_items = {
+            '__pycache__', 'node_modules', '.git', '.venv', 'venv', 'env',
+            '.idea', '.vscode', 'dist', 'build', '.pytest_cache', '.mypy_cache',
+            'htmlcov', '.eggs', '.env', '.env.local', '.env.development',
+            '*.pyc', '*.pyo', '.DS_Store', 'Thumbs.db'
+        }
+        
+        # Process files to extract folder structure
+        for file_info in files_list:
+            filepath = file_info.get('path', file_info) if isinstance(file_info, dict) else file_info
+            
+            # Skip excluded items
+            skip = False
+            for excluded in excluded_items:
+                if excluded in filepath:
+                    skip = True
+                    break
+            if skip:
+                continue
+            
+            # Apply content filter if available
+            if self.content_filter and self.content_filter.is_sensitive_file(filepath):
+                continue
+            
+            parts = Path(filepath).parts
+            if len(parts) > 1:
+                folder = parts[0]
+                if folder not in excluded_items and not folder.startswith('.') and not folder.startswith('__'):
+                    if folder not in folders:
+                        folders[folder] = set()
+                    # Add subfolder or file
+                    if len(parts) > 2:
+                        folders[folder].add(parts[1] + '/')
+                    else:
+                        folders[folder].add(parts[1])
+            elif len(parts) == 1:
+                filename = parts[0]
+                if not filename.startswith('.') or filename in ['.gitignore', '.env.example']:
+                    root_files.add(filename)
+        
+        # Build the structure string
         structure = """## 📁 Project Structure
 
 ```
-project_root/
-|
-|-- app/
-|   |-- __init__.py
-|   |-- main.py            # Application entry point
-|   |-- config.py          # Configuration management
-|   |-- models.py          # Data models
-|   `-- utils.py           # Utility functions
-|
-|-- core/
-|   |-- __init__.py
-|   |-- processor.py       # Core processing logic
-|   |-- validator.py       # Input validation
-|   `-- exceptions.py      # Custom exceptions
-|
-|-- services/
-|   |-- __init__.py
-|   |-- api_service.py     # External API integration
-|   |-- db_service.py      # Database operations
-|   `-- notification.py    # Notification handling
-|
-|-- tests/
-|   |-- __init__.py
-|   |-- test_core.py       # Core functionality tests
-|   |-- test_services.py   # Service tests
-|   `-- test_integration.py # Integration tests
-|
-|-- docs/
-|   |-- api.md             # API documentation
-|   |-- configuration.md   # Configuration guide
-|   `-- development.md     # Development guide
-|
-|-- scripts/
-|   |-- setup.py           # Setup script
-|   |-- migrate.py         # Database migrations
-|   `-- deploy.sh          # Deployment script
-|
-|-- data/                  # Data directory
-|-- logs/                  # Log files
-|-- .env.example           # Environment variables example
-|-- .gitignore             # Git ignore file
-|-- requirements.txt       # Python dependencies
-|-- Dockerfile             # Docker configuration
-|-- docker-compose.yml     # Docker Compose configuration
-`-- README.md              # This file
-```
-
-### Key Directories
-
-- **`app/`**: Main application code
-- **`core/`**: Core business logic
-- **`services/`**: External service integrations
-- **`tests/`**: Test suite
-- **`docs/`**: Additional documentation
-- **`scripts/`**: Utility scripts"""
+"""
+        # Get project name from analysis
+        project_name = analysis_result.get('project_name', 'project_root')
+        structure += f"{project_name}/\n"
+        
+        # Add folders
+        sorted_folders = sorted(folders.keys())
+        for i, folder in enumerate(sorted_folders):
+            is_last_folder = (i == len(sorted_folders) - 1) and not root_files
+            prefix = "└── " if is_last_folder else "├── "
+            structure += f"{prefix}{folder}/\n"
+            
+            # Add some key subfolders/files (limited to avoid clutter)
+            sub_items = sorted(list(folders[folder]))[:5]
+            for j, sub in enumerate(sub_items):
+                is_last_sub = j == len(sub_items) - 1
+                sub_prefix = "    └── " if is_last_sub else "    ├── "
+                structure += f"{sub_prefix}{sub}\n"
+            
+            if len(folders[folder]) > 5:
+                structure += f"    └── ... ({len(folders[folder]) - 5} more files)\n"
+        
+        # Add root files
+        sorted_root_files = sorted(list(root_files))[:8]  # Limit root files
+        for i, filename in enumerate(sorted_root_files):
+            is_last = i == len(sorted_root_files) - 1
+            prefix = "└── " if is_last else "├── "
+            structure += f"{prefix}{filename}\n"
+        
+        if len(root_files) > 8:
+            structure += f"└── ... ({len(root_files) - 8} more files)\n"
+        
+        structure += "```\n\n"
+        
+        # Add folder descriptions
+        structure += "### Key Directories\n\n"
+        
+        for folder in sorted_folders:
+            if folder in folder_descriptions:
+                desc = folder_descriptions[folder]
+            else:
+                desc = f"{folder.replace('_', ' ').title()} module"
+            structure += f"- **`{folder}/`**: {desc}\n"
         
         return structure
     

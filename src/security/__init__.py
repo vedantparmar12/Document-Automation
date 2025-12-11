@@ -1,4 +1,5 @@
 from .validation import *
+from .content_filter import ContentFilter, create_content_filter
 
 __all__ = [
     'validate_path',
@@ -12,6 +13,8 @@ __all__ = [
     'SecurityValidationResult',
     'ALLOWED_USERNAMES',
     'ALLOWED_EXTENSIONS',
-    'MAX_FILE_SIZE'
+    'MAX_FILE_SIZE',
+    # Content filter exports
+    'ContentFilter',
+    'create_content_filter',
 ]
-
