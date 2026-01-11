@@ -92,10 +92,10 @@ class ArchitectureDiagramGenerator:
         """Generate deployment architecture diagram."""
         
         lines = [
+            f"%% {title}",
             "flowchart TB",
-            f"    title[\"{title}\"]",
             "",
-            "    subgraph \"Cloud Infrastructure\""
+            "    subgraph Cloud[\"Cloud Infrastructure\"]"
         ]
         
         # Extract deployment components
@@ -177,8 +177,8 @@ class ArchitectureDiagramGenerator:
         """Generate data flow diagram."""
         
         lines = [
-            "flowchart LR",
-            f"    title[\"{title}\"]"
+            f"%% {title}",
+            "flowchart LR"
         ]
         
         # Track all nodes
@@ -238,10 +238,10 @@ class ArchitectureDiagramGenerator:
         """Generate security architecture diagram."""
         
         lines = [
+            f"%% {title}",
             "flowchart TD",
-            f"    title[\"{title}\"]",
             "",
-            "    subgraph \"External\""
+            "    subgraph External[\"External\"]"
         ]
         
         # External threats and users
@@ -259,7 +259,7 @@ class ArchitectureDiagramGenerator:
         lines.extend([
             "    end",
             "",
-            "    subgraph \"Security Perimeter\""
+            "    subgraph SecurityPerimeter[\"Security Perimeter\"]"
         ])
         
         # Security controls
@@ -281,7 +281,7 @@ class ArchitectureDiagramGenerator:
         lines.extend([
             "    end",
             "",
-            "    subgraph \"Protected Systems\""
+            "    subgraph ProtectedSystems[\"Protected Systems\"]"
         ])
         
         # Protected systems

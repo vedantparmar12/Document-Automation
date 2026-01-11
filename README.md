@@ -7,6 +7,21 @@
 
 > **A sophisticated Model Context Protocol (MCP) server that enables AI assistants to automatically analyze codebases and generate comprehensive, professional documentation.**
 
+## 🎯 What's New - Universal Documentation Generation!
+
+**FIXED:** Documentation is now truly unique for each codebase! The system now:
+
+✅ **Extracts REAL features** from actual code (classes, functions, APIs)
+✅ **Uses ACTUAL project metadata** (version, license, description from package.json, pyproject.toml, etc.)
+✅ **Generates UNIQUE architecture diagrams** based on actual directory structure
+✅ **Includes REAL code examples** from the project
+✅ **Detects REAL API endpoints** (Flask, FastAPI, Django, Express)
+✅ **Uses ACTUAL dependencies** with correct versions
+✅ **Reads ACTUAL README content** and incorporates it
+✅ **Extracts REAL environment variables** from .env files
+
+**No more generic templates!** Each project gets documentation that accurately reflects its actual implementation.
+
 ## Overview
 
 Document Automation is an intelligent documentation generation system that bridges the gap between AI assistants and code documentation workflows. By implementing the Model Context Protocol (MCP), it allows AI assistants like Claude to seamlessly analyze project structures, extract insights, and generate professional-grade documentation automatically.
@@ -75,15 +90,52 @@ chmod +x setup_claude_desktop.sh
 
 Once installed, you can use the system through your AI assistant:
 
+#### Analyzing Any GitHub Repository
+
 ```
-"Analyze the codebase at /path/to/my/project and generate comprehensive documentation"
+"Analyze the codebase at https://github.com/facebook/react"
 ```
+
+For **private repositories**, set the `GITHUB_TOKEN` environment variable:
+
+```bash
+# Windows PowerShell
+$env:GITHUB_TOKEN = "ghp_your_personal_access_token"
+
+# Linux/macOS
+export GITHUB_TOKEN=ghp_your_personal_access_token
+```
+
+Then ask your AI assistant to analyze the repo:
+```
+"Analyze the private repo at https://github.com/myorg/private-repo"
+```
+
+#### Analyzing Local Directories
+
+```
+"Analyze the local codebase at C:/Projects/my-app"
+```
+
+or on Unix/macOS:
+```
+"Analyze the local codebase at /home/user/projects/my-app"
+```
+
+#### What Happens
 
 The system will automatically:
 1. **Analyze** the project structure and dependencies
-2. **Extract** key architectural insights
-3. **Generate** professional documentation
-4. **Format** the output in your preferred style
+2. **Detect** frameworks and technology stack
+3. **Generate** architecture diagrams (Mermaid format)
+4. **Extract** API endpoints and database schemas
+5. **Create** professional documentation in multiple formats
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GITHUB_TOKEN` | Personal access token for private repos | No (only for private repos) |
 
 ## MCP Tools Reference
 

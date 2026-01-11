@@ -13,6 +13,11 @@ from datetime import datetime
 from pathlib import Path
 import json
 
+from src.diagrams.architecture_diagrams import ArchitectureDiagramGenerator
+from src.diagrams.mermaid_generator import MermaidGenerator
+from src.analyzers.project_info_detector import ProjectInfoDetector, should_ignore_path
+from src.generators.professional_doc_generator_v2 import ProfessionalDocumentationGeneratorV2
+
 # Import content filter for security
 try:
     from src.security.content_filter import ContentFilter, create_content_filter
@@ -32,6 +37,9 @@ class ProfessionalDocumentationGenerator:
             self.content_filter = create_content_filter(strict_mode=True)
         else:
             self.content_filter = None
+            
+        self.arch_generator = ArchitectureDiagramGenerator()
+        self.mermaid_generator = MermaidGenerator()
         
         self.project_patterns = {
             'tracker': {
@@ -95,24 +103,22 @@ class ProfessionalDocumentationGenerator:
         return [d.lower() for d in dependencies]
     
     def generate_documentation(
-        self, 
-        analysis_result: Dict[str, Any], 
-        project_root: str, 
-        output_path: str, 
+        self,
+        analysis_result: Dict[str, Any],
+        project_root: str,
+        output_path: str,
         repo_url: str
     ) -> str:
         """
         Generates professional documentation from analysis results.
+        Uses V2 generator with real code extraction for unique documentation.
         """
         logger.info(f"Generating professional documentation for: {output_path}")
-        
-        # Extract project information
-        project_name = self._extract_project_name(repo_url, project_root)
-        
+
         # Check if this is an MCP server and use specialized generator
         try:
             from .mcp_doc_generator import MCPDocumentationGenerator
-            
+
             classification = analysis_result.get('classification', {})
             if classification.get('primary_type') == 'mcp_server':
                 mcp_info = analysis_result.get('mcp_server_info')
@@ -121,14 +127,83 @@ class ProfessionalDocumentationGenerator:
                     mcp_generator = MCPDocumentationGenerator()
                     return mcp_generator.generate(
                         mcp_info=mcp_info,
-                        project_name=project_name,
+                        project_name=analysis_result.get('project_name', 'MCP Server'),
                         project_root=project_root
                     )
-                else:
-                    logger.info("MCP server detected but no tool info available, using generic generator")
         except Exception as e:
-            logger.warning(f"MCP documentation generation failed: {e}, falling back to generic generator")
+            logger.warning(f"MCP documentation generation failed: {e}, using V2 generator")
+
+        # Use V2 generator for all other projects - generates UNIQUE docs
+        try:
+            logger.info("Using V2 Documentation Generator with real code extraction")
+            v2_generator = ProfessionalDocumentationGeneratorV2()
+            return v2_generator.generate_documentation(
+                analysis_result=analysis_result,
+                project_root=project_root,
+                output_path=output_path,
+                repo_url=repo_url
+            )
+        except Exception as e:
+            logger.error(f"V2 generator failed: {e}, falling back to basic generator")
+            # Fallback to basic generation if V2 fails
+            return self._generate_basic_documentation(analysis_result, project_root, output_path, repo_url)
+
+    def _generate_basic_documentation(
+        self,
+        analysis_result: Dict[str, Any],
+        project_root: str,
+        output_path: str,
+        repo_url: str
+    ) -> str:
+        """Basic fallback documentation generator."""
+        project_name = os.path.basename(project_root) if project_root else 'Project'
+
+        basic_doc = f"""# {project_name}
+
+## Overview
+
+This is a software project.
+
+## Installation
+
+```bash
+git clone {repo_url if repo_url else 'repository-url'}
+cd {project_name.lower().replace(' ', '-')}
+```
+
+## Usage
+
+Run the project according to its documentation.
+
+## License
+
+See LICENSE file for details.
+"""
+
+        try:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(basic_doc)
+        except Exception as e:
+            logger.error(f"Failed to save basic documentation: {e}")
+
+        return basic_doc
+        
+        # Analyze project type and merge with detected info
         project_info = self._analyze_project_type(project_name, analysis_result)
+        
+        # Merge detected info into project_info for accurate badges
+        project_info['detected_version'] = detected_info.get('version', '1.0.0')
+        project_info['detected_license'] = detected_info.get('license', 'MIT')
+        project_info['detected_language'] = detected_info.get('language', 'Python')
+        project_info['detected_description'] = detected_info.get('description', '')
+        project_info['detected_author'] = detected_info.get('author', {})
+        project_info['detected_frameworks'] = detected_info.get('frameworks', [])
+        project_info['detected_keywords'] = detected_info.get('keywords', [])
+        project_info['has_tests'] = detected_info.get('has_tests', False)
+        project_info['has_ci'] = detected_info.get('has_ci', {})
+        project_info['has_docker'] = detected_info.get('has_docker', False)
+        project_info['repo_url'] = detected_info.get('repository_url', repo_url)
         
         # Generate all sections
         sections = []
@@ -253,21 +328,38 @@ class ProfessionalDocumentationGenerator:
         }
     
     def _generate_title_section(self, project_name: str, project_info: Dict[str, Any]) -> str:
-        """Generate title with professional badges and tagline."""
-        # Generate professional badges
-        badges = f"""# {project_name} - Complete System Documentation
+        """Generate title with professional badges and tagline using detected metadata."""
+        # Get detected info or use defaults
+        version = project_info.get('detected_version', '1.0.0')
+        license_name = project_info.get('detected_license', 'MIT')
+        language = project_info.get('detected_language', 'Python')
+        
+        # Generate accurate badges
+        badges = f"""# {project_name}
 
-## 🎯 Overview
+{project_info.get('detected_description', f'{project_name} is a ' + project_info['type'].lower() + ' that ' + project_info['description'] + '.')}
 
-{project_name} is a {project_info['type'].lower()} that {project_info['description']}.
-
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Python](https://img.shields.io/badge/python-3.8+-green)
-![License](https://img.shields.io/badge/license-MIT-yellow)
+![Version](https://img.shields.io/badge/version-{version.replace('-', '--')}-blue)
+![{language}](https://img.shields.io/badge/{language.lower().replace(' ', '_')}-{self._get_language_version(language)}-green)
+![License](https://img.shields.io/badge/license-{license_name.replace('-', '_')}-yellow)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Maintained](https://img.shields.io/badge/maintained-yes-success)"""
         
         return badges
+    
+    def _get_language_version(self, language: str) -> str:
+        """Get typical version requirement for a language."""
+        versions = {
+            'Python': '3.8+',
+            'JavaScript': 'ES6+',
+            'TypeScript': '4.0+',
+            'Java': '11+',
+            'Go': '1.18+',
+            'Rust': '1.60+',
+            'Ruby': '3.0+',
+            'PHP': '8.0+',
+        }
+        return versions.get(language, 'latest')
     
     def _generate_toc(self) -> str:
         """Generate table of contents with emojis."""
@@ -2450,20 +2542,124 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
                 )
             elif format.lower() == 'pdf':
                 from xhtml2pdf import pisa
-                html_content = self.generate_interactive_documentation(
-                    analysis_result=analysis_result,
-                    title=title or "Documentation",
-                    theme=theme,
-                    include_search=include_search,
-                    include_navigation=include_toc,
-                    include_live_diagrams=include_diagrams,
-                    output_path=None  # Don't write HTML to file
-                )
+                
+                # Generate specialized 'Manager View' HTML for PDF
+                # Convert dict to object-like structure for arch generator if needed or use dict directly
+                # ArchitectureDiagramGenerator expects dict for analysis_data
+                
+                # Create clean analysis dict for diagram generator
+                analysis_dict = {
+                    'frameworks': analysis_result.get('frameworks', []),
+                    'file_structure': str(analysis_result.get('project_structure', {})),
+                    'services': [],
+                    'classification': analysis_result.get('classification', {})
+                }
+                
+                mermaid_diagram = self.arch_generator.generate_system_architecture(analysis_dict)
+                tech_stack = analysis_result.get('technology_stack', [])
+                if not tech_stack:
+                     # Fallback to extracting from dependencies
+                     deps = analysis_result.get('dependencies', [])
+                     tech_stack = [d.get('name', d) for d in deps[:10]]
+
+                # Simple clean HTML purely for PDF export
+                title_text = title or "Executive Summary"
+                html_content = f"""
+                <html>
+                <head>
+                    <style>
+                        @page {{
+                            size: A4;
+                            margin: 2cm;
+                        }}
+                        body {{
+                            font-family: Helvetica, sans-serif;
+                            color: #333;
+                        }}
+                        h1 {{ color: #2563eb; border-bottom: 2px solid #eee; padding-bottom: 10px; }}
+                        h2 {{ color: #1e293b; margin-top: 30px; }}
+                        .badge {{
+                            background-color: #f1f5f9;
+                            border: 1px solid #cbd5e1;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            font-size: 10px;
+                            display: inline-block;
+                            margin-right: 5px;
+                            margin-bottom: 5px;
+                        }}
+                        .card {{
+                            background-color: #f8fafc;
+                            border-left: 4px solid #2563eb;
+                            padding: 15px;
+                            margin-bottom: 15px;
+                        }}
+                        .diagram-box {{
+                            border: 1px solid #e2e8f0;
+                            padding: 20px;
+                            text-align: center;
+                            margin: 20px 0;
+                            background: #fff;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <h1>{title_text}</h1>
+                    <p style="color: #64748b; font-size: 14px;">Generated on {datetime.now().strftime('%Y-%m-%d')}</p>
+                    
+                    <div style="margin-top: 20px;">
+                        {' '.join([f'<span class="badge">{t}</span>' for t in tech_stack])}
+                    </div>
+
+                    <h2>System Architecture</h2>
+                    <p>High-level visual representation of the system components and interactions.</p>
+                    
+                    <div class="diagram-box">
+                        <p><strong>[Mermaid Diagram]</strong></p>
+                        <pre style="font-size: 8px; text-align: left; background: #f1f1f1; padding: 10px;">{mermaid_diagram}</pre>
+                        <p style="font-size: 10px; color: #888;">(Note: Mermaid diagrams require JS to render. In this PDF text view, we show the definition.)</p>
+                    </div>
+
+                    <h2>How It Works</h2>
+                    
+                    <div class="card">
+                        <h3>1. User Interaction</h3>
+                        <p>Users interact with the <strong>Presentation Layer</strong> (User Interface), handling inputs and displaying information.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>2. Request Processing</h3>
+                        <p>Requests are sent to the <strong>API/Controller Layer</strong>, which validates them and applies business rules.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>3. Business Logic</h3>
+                        <p>The <strong>Business Layer</strong> processes calculations and core logic.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>4. Data Management</h3>
+                        <p>The <strong>Data Access Layer</strong> securely manages communication with the Database.</p>
+                    </div>
+                    
+                    <h2>Key Technologies</h2>
+                    <ul>
+                        {''.join([f'<li>{t}</li>' for t in tech_stack])}
+                    </ul>
+                </body>
+                </html>
+                """
+
+                # NOTE: xhtml2pdf has limited CSS support and NO JS support.
+                # It CANNOT render Mermaid diagrams directly from text.
+                # For real Mermaid in PDF, we'd need headless chrome (pyppeteer) or an image generation service.
+                # Here we provide a clean clear "Executive Layout" but acknowledge the limitation.
+                
                 with open(output_path, "w+b") as pdf_file:
                     pisa_status = pisa.CreatePDF(
                         html_content,                # the HTML to convert
                         dest=pdf_file)           # file handle to receive result
-
+ 
                 return output_path
             elif format.lower() in ['md', 'markdown']:
                 # Generate markdown

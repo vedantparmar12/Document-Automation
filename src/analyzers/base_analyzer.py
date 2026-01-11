@@ -3,6 +3,8 @@ Base analyzer class for code analysis
 
 This module provides the foundation for analyzing different types of codebases
 and extracting their structure, dependencies, and metadata.
+
+Now with smart filtering to skip irrelevant directories like node_modules, .git, venv, etc.
 """
 
 import os
@@ -159,8 +161,12 @@ class BaseAnalyzer(ABC):
             await self._validate_local_path()
 
     async def _clone_github_repo(self):
-        """Clone a GitHub repository to a temporary directory."""
+        """Clone a GitHub repository to a temporary directory.
+        
+        Supports private repos via GITHUB_TOKEN environment variable.
+        """
         import tempfile
+        from urllib.parse import urlparse
 
         # Create a unique temporary directory for the cloned repository.
         self.temp_dir = tempfile.mkdtemp(prefix=f"analysis_{self.analysis_id}_")
@@ -170,16 +176,44 @@ class BaseAnalyzer(ABC):
             if not github_url.endswith('.git'):
                 github_url += '.git'
 
-            logger.info(f"Cloning repository: {github_url}")
+            # Check for GITHUB_TOKEN for private repo access
+            github_token = os.environ.get('GITHUB_TOKEN')
+            clone_url = github_url
+            
+            if github_token:
+                # Embed token in URL for authentication
+                parsed = urlparse(github_url)
+                clone_url = f"{parsed.scheme}://{github_token}@{parsed.netloc}{parsed.path}"
+                logger.info(f"Cloning repository with authentication: {github_url}")
+            else:
+                logger.info(f"Cloning repository (public access): {github_url}")
 
             # Clone the repository into the temporary directory.
-            repo = git.Repo.clone_from(github_url, self.temp_dir)
+            repo = git.Repo.clone_from(clone_url, self.temp_dir, depth=1)
 
             # Set the working path to the temporary directory for subsequent analysis.
             self.working_path = self.temp_dir
 
-            logger.info(f"Repository cloned to: {self.temp_dir}")
+            logger.info(f"Repository cloned successfully to: {self.temp_dir}")
 
+        except git.exc.GitCommandError as e:
+            # If cloning fails, clean up the partially created directory.
+            if self.temp_dir and os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir, onerror=_handle_remove_readonly)
+            
+            error_msg = str(e)
+            if "Authentication failed" in error_msg or "could not read Username" in error_msg:
+                raise Exception(
+                    f"Authentication failed for {github_url}. "
+                    "For private repos, set GITHUB_TOKEN environment variable with a valid personal access token."
+                )
+            elif "Repository not found" in error_msg:
+                raise Exception(
+                    f"Repository not found: {github_url}. "
+                    "Check the URL is correct, or set GITHUB_TOKEN for private repos."
+                )
+            else:
+                raise Exception(f"Failed to clone repository: {error_msg}")
         except Exception as e:
             # If cloning fails, clean up the partially created directory.
             if self.temp_dir and os.path.exists(self.temp_dir):
@@ -228,8 +262,14 @@ class BaseAnalyzer(ABC):
             for item in os.listdir(directory_path):
                 if not self.include_hidden and item.startswith('.'):
                     continue
-
+                
+                # Skip directories that should be ignored (node_modules, .git, venv, etc.)
                 item_path = os.path.join(directory_path, item)
+                if os.path.isdir(item_path):
+                    from src.analyzers.project_info_detector import IGNORE_PATTERNS
+                    if item in IGNORE_PATTERNS:
+                        logger.debug(f"Skipping ignored directory: {item}")
+                        continue
 
                 if os.path.isfile(item_path):
                     # Validate file extension and size before including it in the results.

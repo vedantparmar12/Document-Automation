@@ -98,8 +98,8 @@ class MermaidGenerator:
         
         # Generate mermaid syntax
         lines = [
-            "graph TD",
-            f"    title[\"{title}\"]"
+            f"%% {title}",
+            "graph TD"
         ]
         
         # Add nodes with styling
@@ -137,8 +137,8 @@ class MermaidGenerator:
         """Generate a mermaid class diagram from class analysis data."""
         
         lines = [
-            "classDiagram",
-            f"    title {title}"
+            f"%% {title}",
+            "classDiagram"
         ]
         
         # Add classes
@@ -189,8 +189,8 @@ class MermaidGenerator:
         """Generate an architecture flowchart diagram."""
         
         lines = [
-            "flowchart TB",
-            f"    title[\"{title}\"]"
+            f"%% {title}",
+            "flowchart TB"
         ]
         
         # Add components
@@ -246,8 +246,8 @@ class MermaidGenerator:
         """Generate a mermaid ER diagram from database schema."""
         
         lines = [
-            "erDiagram",
-            f"    title {title}"
+            f"%% {title}",
+            "erDiagram"
         ]
         
         # Add tables
@@ -303,8 +303,8 @@ class MermaidGenerator:
         """Generate a diagram showing project file structure."""
         
         lines = [
-            "flowchart TD",
-            f"    title[\"{title}\"]"
+            f"%% {title}",
+            "flowchart TD"
         ]
         
         def add_directory(path: str, content: Dict[str, Any], depth: int = 0):
@@ -354,8 +354,8 @@ class MermaidGenerator:
         """Generate a sequence diagram showing API interactions."""
         
         lines = [
+            f"%% {title}",
             "sequenceDiagram",
-            f"    title {title}",
             "    participant C as Client",
             "    participant API as API Server",
             "    participant DB as Database"
@@ -382,8 +382,8 @@ class MermaidGenerator:
         """Generate a git graph diagram."""
         
         lines = [
+            f"%% {title}",
             "gitgraph",
-            f"    title: {title}",
             "    commit id: \"Initial commit\"",
             "    branch develop",
             "    commit id: \"Setup project\""
@@ -414,8 +414,9 @@ class MermaidGenerator:
         """Generate a user journey diagram."""
         
         lines = [
+            f"%% {title}",
             "journey",
-            f"    title {title}",
+            "    title User Journey",
             "    section Getting Started"
         ]
         
