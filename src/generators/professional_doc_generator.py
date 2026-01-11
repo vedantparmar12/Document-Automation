@@ -17,6 +17,7 @@ from src.diagrams.architecture_diagrams import ArchitectureDiagramGenerator
 from src.diagrams.mermaid_generator import MermaidGenerator
 from src.analyzers.project_info_detector import ProjectInfoDetector, should_ignore_path
 from src.generators.professional_doc_generator_v2 import ProfessionalDocumentationGeneratorV2
+from src.generators.beautiful_doc_generator import BeautifulDocumentationGenerator
 
 # Import content filter for security
 try:
@@ -133,20 +134,33 @@ class ProfessionalDocumentationGenerator:
         except Exception as e:
             logger.warning(f"MCP documentation generation failed: {e}, using V2 generator")
 
-        # Use V2 generator for all other projects - generates UNIQUE docs
+        # Use Beautiful generator for comprehensive, workflow-based documentation
         try:
-            logger.info("Using V2 Documentation Generator with real code extraction")
-            v2_generator = ProfessionalDocumentationGeneratorV2()
-            return v2_generator.generate_documentation(
+            logger.info("🎨 Using Beautiful Documentation Generator - comprehensive workflow analysis")
+            beautiful_generator = BeautifulDocumentationGenerator()
+            return beautiful_generator.generate(
                 analysis_result=analysis_result,
                 project_root=project_root,
                 output_path=output_path,
                 repo_url=repo_url
             )
         except Exception as e:
-            logger.error(f"V2 generator failed: {e}, falling back to basic generator")
-            # Fallback to basic generation if V2 fails
-            return self._generate_basic_documentation(analysis_result, project_root, output_path, repo_url)
+            logger.warning(f"Beautiful generator failed: {e}, trying V2 generator")
+
+            # Fallback to V2 generator
+            try:
+                logger.info("Using V2 Documentation Generator with real code extraction")
+                v2_generator = ProfessionalDocumentationGeneratorV2()
+                return v2_generator.generate_documentation(
+                    analysis_result=analysis_result,
+                    project_root=project_root,
+                    output_path=output_path,
+                    repo_url=repo_url
+                )
+            except Exception as e2:
+                logger.error(f"V2 generator also failed: {e2}, falling back to basic generator")
+                # Final fallback to basic generation
+                return self._generate_basic_documentation(analysis_result, project_root, output_path, repo_url)
 
     def _generate_basic_documentation(
         self,
