@@ -12,8 +12,6 @@ from datetime import datetime
 from pathlib import Path
 
 from src.schemas import DocumentationResult, DocumentationFormat, CodeAnalysisResult
-
-from src.schemas import DocumentationResult, DocumentationFormat, CodeAnalysisResult
 from src.diagrams.architecture_diagrams import ArchitectureDiagramGenerator, ArchitecturePattern
 from src.diagrams.mermaid_generator import MermaidGenerator
 
