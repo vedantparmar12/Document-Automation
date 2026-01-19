@@ -1,0 +1,50 @@
+# GitHub PR Manager Skill - Ignore temporary and generated files
+
+# Temporary review workspaces
+/tmp/
+*.tmp
+*.temp
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Script output
+*.log
+*.diff
+*.patch
+chunk_*
+review_workspace_*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.nfs*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Environment
+.env
+.env.local
+
+# Test outputs
+test_output/
+test_*.json

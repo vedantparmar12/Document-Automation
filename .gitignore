@@ -82,7 +82,9 @@ analyze_*.py
 working.md
 IMPLEMENTATION_SUMMARY.md
 MCP_USAGE_GUIDE.md
-.claude
+# Claude Code - ignore settings but keep skills
+.claude/*
+!.claude/skills/
 
 # Local configuration
 cursor_mcp_config.json

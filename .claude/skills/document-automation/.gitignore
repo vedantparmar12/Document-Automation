@@ -1,0 +1,22 @@
+# Temporary files
+tmpclaude-*
+*.tmp
+*.temp
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated output
+output/
+*.generated.md
+*.generated.html
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
