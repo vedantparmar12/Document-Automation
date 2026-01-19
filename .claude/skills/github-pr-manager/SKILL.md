@@ -1,6 +1,6 @@
 ---
 name: github-pr-manager
-description: Manage GitHub pull requests with smart navigation, code review, and commenting capabilities. Use when working with PRs, reviewing code changes, adding PR comments, navigating large diffs, or performing code reviews on GitHub. Handles context management for large PRs automatically.
+description: Manage GitHub pull requests - create PRs, review code, add comments, and navigate large diffs. Use when creating PRs, reviewing code changes, adding PR comments, or performing code reviews on GitHub. Handles context management for large PRs automatically.
 allowed-tools:
   - Read
   - Bash(gh:*)
@@ -14,15 +14,16 @@ user-invocable: true
 
 # GitHub PR Manager Skill
 
-Enables intelligent interaction with GitHub pull requests directly from Claude CLI. This skill handles reading PRs, navigating large changesets, adding contextual comments, and performing comprehensive code reviews while managing context window limitations automatically.
+Enables intelligent interaction with GitHub pull requests directly from Claude CLI. This skill handles creating PRs, reading PRs, navigating large changesets, adding contextual comments, and performing comprehensive code reviews while managing context window limitations automatically.
 
 ## Core Capabilities
 
-1. **PR Reading & Analysis**: Fetch and analyze PR metadata, descriptions, and file changes
-2. **Smart Navigation**: Handle PRs with 100+ files through intelligent chunking
-3. **Inline Commenting**: Add contextual comments to specific code lines
-4. **Code Review**: Perform structured reviews with approval/change requests
-5. **Context Management**: Automatically chunk large diffs to prevent token overflow
+1. **PR Creation**: Create pull requests with proper titles, descriptions, and labels
+2. **PR Reading & Analysis**: Fetch and analyze PR metadata, descriptions, and file changes
+3. **Smart Navigation**: Handle PRs with 100+ files through intelligent chunking
+4. **Inline Commenting**: Add contextual comments to specific code lines
+5. **Code Review**: Perform structured reviews with approval/change requests
+6. **Context Management**: Automatically chunk large diffs to prevent token overflow
 
 ## Prerequisites
 
@@ -40,6 +41,108 @@ gh auth status
 ```
 
 ## Quick Start
+
+### 0. Creating a Pull Request
+
+To create a new PR from your current branch:
+
+```bash
+# Step 1: Check current branch and status
+git status
+git branch
+
+# Step 2: Ensure changes are committed
+git add -A
+git commit -m "Your commit message"
+
+# Step 3: Push branch to remote
+git push -u origin <BRANCH_NAME>
+
+# Step 4: Create PR with gh CLI
+gh pr create --title "PR Title" --body "PR Description"
+```
+
+**Full PR Creation with All Options:**
+
+```bash
+gh pr create \
+  --title "feat: Add user authentication" \
+  --body "## Summary
+- Added login/logout functionality
+- Implemented JWT token handling
+- Added password hashing
+
+## Test Plan
+- [x] Unit tests pass
+- [x] Manual testing completed
+
+## Related Issues
+Closes #123" \
+  --base main \
+  --head feature-branch \
+  --assignee @me \
+  --reviewer teammate1,teammate2 \
+  --label "enhancement,needs-review"
+```
+
+**Create PR from Uncommitted Changes:**
+
+```bash
+# Stage and commit all changes
+git add -A
+git commit -m "$(cat <<'EOF'
+feat: Description of changes
+
+- Change 1
+- Change 2
+EOF
+)"
+
+# Create branch if on main
+git checkout -b feature/my-feature
+
+# Push and create PR in one command
+gh pr create --fill  # Auto-fills title/body from commits
+```
+
+**Create Draft PR:**
+
+```bash
+gh pr create --draft --title "WIP: Feature in progress" --body "Not ready for review yet"
+```
+
+**PR Creation Workflow I Follow:**
+
+1. First, check what will be included:
+   ```bash
+   git status
+   git diff --stat origin/main
+   git log origin/main..HEAD --oneline
+   ```
+
+2. Generate descriptive PR body:
+   ```bash
+   gh pr create --title "Title" --body "$(cat <<'EOF'
+   ## Summary
+   Brief description of changes
+
+   ## Changes Made
+   - Change 1
+   - Change 2
+
+   ## Test Plan
+   How to test these changes
+
+   ## Screenshots (if applicable)
+
+   EOF
+   )"
+   ```
+
+3. Verify PR was created:
+   ```bash
+   gh pr view --web  # Opens in browser
+   ```
 
 ### 1. Reading a Pull Request
 
@@ -417,11 +520,23 @@ git diff -U10  # 10 lines of context
 ## Summary
 
 This skill enables you to:
-- ✅ Read and analyze any PR, regardless of size
-- ✅ Navigate large changesets without context overflow
-- ✅ Add precise, line-specific comments
-- ✅ Perform comprehensive code reviews
-- ✅ Submit structured feedback
-- ✅ Integrate seamlessly with GitHub workflow
+- ✅ **Create PRs** with proper titles, descriptions, labels, and reviewers
+- ✅ **Read and analyze** any PR, regardless of size
+- ✅ **Navigate large changesets** without context overflow
+- ✅ **Add precise comments** to specific lines
+- ✅ **Perform comprehensive code reviews**
+- ✅ **Submit structured feedback** (approve/request changes)
+- ✅ **Integrate seamlessly** with GitHub workflow
 
-Simply ask me to review a PR, and I'll handle all the complexity of context management, navigation, and structured feedback.
+Simply ask me to create a PR, review a PR, or manage any PR workflow, and I'll handle all the complexity of context management, navigation, and structured feedback.
+
+## Example Requests
+
+```
+"Create a PR for my current changes"
+"Review PR #123 in myorg/myrepo"
+"Create a draft PR with title 'WIP: New feature'"
+"Add a comment about the authentication logic in PR #456"
+"Approve PR #789 with feedback"
+"Create PR from this branch to main with reviewers @alice and @bob"
+```

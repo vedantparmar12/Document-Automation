@@ -459,50 +459,57 @@ class FileChunker:
     def _find_functions(self, lines: List[str], content_type: str) -> List[Dict[str, Any]]:
         """Find function boundaries in code."""
         functions = []
-        
+
         # Get language-specific patterns
         lang = self._get_language_from_content_type(content_type)
         patterns = self.FUNCTION_PATTERNS.get(lang, [])
-        
+
         for i, line in enumerate(lines):
             for pattern in patterns:
                 match = re.match(pattern, line)
                 if match:
                     # Find end of function by indentation or braces
                     end_line = self._find_block_end(lines, i, lang)
-                    functions.append({
-                        'name': match.group(-1),  # Last capture group is usually function name
-                        'start': i,
-                        'end': end_line,
-                        'type': 'function'
-                    })
+                    # Get the last captured group (the function name)
+                    groups = match.groups()
+                    func_name = groups[-1] if groups else None
+                    if func_name:
+                        functions.append({
+                            'name': func_name,
+                            'start': i,
+                            'end': end_line,
+                            'type': 'function'
+                        })
                     break
-        
+
         return functions
     
     def _find_classes(self, lines: List[str], content_type: str) -> List[Dict[str, Any]]:
         """Find class boundaries in code."""
         classes = []
-        
+
         lang = self._get_language_from_content_type(content_type)
         class_patterns = [
             r'^\s*class\s+(\w+)',
-            r'^\s*(public|private|protected)?\s*class\s+(\w+)'
+            r'^\s*(?:public|private|protected)?\s*class\s+(\w+)'
         ]
-        
+
         for i, line in enumerate(lines):
             for pattern in class_patterns:
                 match = re.match(pattern, line)
                 if match:
                     end_line = self._find_block_end(lines, i, lang)
-                    classes.append({
-                        'name': match.group(-1),
-                        'start': i,
-                        'end': end_line,
-                        'type': 'class'
-                    })
+                    # Get the last captured group (the class name)
+                    class_name = match.groups()[-1] if match.groups() else match.group(1)
+                    if class_name:
+                        classes.append({
+                            'name': class_name,
+                            'start': i,
+                            'end': end_line,
+                            'type': 'class'
+                        })
                     break
-        
+
         return classes
     
     def _find_sections(self, lines: List[str], content_type: str) -> List[Dict[str, Any]]:

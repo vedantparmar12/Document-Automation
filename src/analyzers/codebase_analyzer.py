@@ -578,12 +578,60 @@ class CodebaseAnalyzer(BaseAnalyzer):
     # Additional methods required by documentation_tools.py
     
     async def analyze_with_pagination(self) -> AnalysisOperationResult:
-        """Analyze codebase with pagination support."""
+        """
+        Analyze codebase with full pagination and chunking support.
+
+        This method uses the ChunkedCodebaseAnalyzer for intelligent
+        file chunking and token management.
+        """
         logger.info(f"Analyzing with pagination for {self.path}")
-        
-        # For now, just delegate to the regular analyze method
-        # In a full implementation, this would handle chunking and pagination
-        return await self.analyze()
+
+        try:
+            from .chunked_analyzer import ChunkedCodebaseAnalyzer, ChunkedAnalysisConfig
+
+            # Configure chunking
+            config = ChunkedAnalysisConfig(
+                max_tokens_per_chunk=self.config.get('max_tokens_per_chunk', 4000),
+                max_file_size_bytes=self.max_file_size,
+                overlap_lines=self.config.get('overlap_lines', 5),
+                preserve_structure=True
+            )
+
+            chunked_analyzer = ChunkedCodebaseAnalyzer(config)
+
+            # Run chunked analysis
+            chunked_result = await chunked_analyzer.analyze_with_chunking(
+                root_path=self.working_path,
+                source_type=self.source_type.value,
+                max_files=self.config.get('max_files', None)
+            )
+
+            if not chunked_result.success:
+                logger.warning(f"Chunked analysis failed: {chunked_result.message}")
+                return await self.analyze()  # Fallback to regular analysis
+
+            # Merge chunked analysis with standard analysis
+            base_result = await self.analyze()
+
+            if base_result.success:
+                # Add chunking metadata to results
+                base_result.data['chunking_info'] = {
+                    'enabled': True,
+                    'total_files': chunked_result.data.get('total_files', 0),
+                    'chunked_files': chunked_result.data.get('chunked_files', 0),
+                    'total_batches': chunked_result.data.get('analysis_summary', {}).get('total_batches', 0),
+                    'total_tokens': chunked_result.data.get('analysis_summary', {}).get('total_tokens_estimated', 0)
+                }
+                base_result.data['file_chunks'] = chunked_result.data.get('chunks_by_file', {})
+
+            return base_result
+
+        except ImportError as e:
+            logger.warning(f"Chunked analyzer not available: {e}, using standard analysis")
+            return await self.analyze()
+        except Exception as e:
+            logger.error(f"Error in paginated analysis: {e}")
+            return await self.analyze()  # Fallback to regular analysis
     
     async def _detect_frameworks(self) -> List[Dict[str, Any]]:
         """Detect frameworks and technology stack with confidence scores."""
